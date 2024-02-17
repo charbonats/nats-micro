@@ -1,0 +1,44 @@
+# mkdocs.yml
+site_name: NATS Micro For Python
+
+theme:
+  name: material
+  features:
+    - content.code.annotate
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/_scripts/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+            # latest instead of stable
+            - https://installer.readthedocs.io/en/latest/objects.inv
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.magiclink
+  - pymdownx.details
+  - attr_list

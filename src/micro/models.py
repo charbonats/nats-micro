@@ -18,7 +18,6 @@ class EndpointStats:
     data: dict[str, object]
 
     def copy(self) -> EndpointStats:
-        """Create a copy of the endpoint stats."""
         return replace(self, data=self.data.copy())
 
 
@@ -35,7 +34,6 @@ class ServiceStats:
     type: str = "io.nats.micro.v1.stats_response"
 
     def copy(self) -> ServiceStats:
-        """Create a copy of the service stats."""
         return replace(
             self,
             endpoints=[ep.copy() for ep in self.endpoints],
@@ -53,7 +51,6 @@ class EndpointInfo:
     queue_group: str
 
     def copy(self) -> EndpointInfo:
-        """Create a copy of the endpoint info."""
         return replace(self, metadata=self.metadata.copy())
 
 
@@ -71,7 +68,6 @@ class ServiceInfo:
     type: str = "io.nats.micro.v1.info_response"
 
     def copy(self) -> ServiceInfo:
-        """Create a copy of the service info."""
         return replace(
             self,
             endpoints=[ep.copy() for ep in self.endpoints],

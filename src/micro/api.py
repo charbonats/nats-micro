@@ -36,19 +36,51 @@ API_PREFIX = "$SRV"
 """APIPrefix is the root of all control subjects."""
 
 
+def add_service(
+    nc: NatsClient,
+    name: str,
+    version: str,
+    description: str | None = None,
+    metadata: dict[str, str] | None = None,
+    queue_group: str | None = None,
+    api_prefix: str | None = None,
+) -> Service:
+    """Create a new service.
+
+    A service is a collection of endpoints that are grouped together
+    under a common name.
+
+    Each endpoint is a request-reply handler for a subject.
+
+    It's possible to add endpoints to a service after it has been created AND
+    started.
+
+    Args:
+        nc: The NATS client.
+        name: The name of the service.
+        version: The version of the service. Must be a valid semver version.
+        description: The description of the service.
+        metadata: The metadata of the service.
+        api_prefix: The prefix of the control subjects.
+    """
+
+    config = internal.ServiceConfig(
+        name=name,
+        version=version,
+        description=description or "",
+        metadata=metadata or {},
+        queue_group=queue_group or DEFAULT_QUEUE_GROUP,
+        pending_bytes_limit_by_endpoint=DEFAULT_SUB_PENDING_BYTES_LIMIT,
+        pending_msgs_limit_by_endpoint=DEFAULT_SUB_PENDING_MSGS_LIMIT,
+    )
+    srv = Service(nc=nc, config=config, api_prefix=api_prefix or API_PREFIX)
+    return srv
+
+
 class Endpoint:
     """Endpoint manages a service endpoint."""
 
     def __init__(self, config: internal.EndpointConfig) -> None:
-        """
-        Create a new endpoint. This is used internally by the service.
-
-        In order to create an endpoint, use `add_endpoint` on a service
-        or a group.
-
-        Args:
-            config: The endpoint configuration.
-        """
         self.config = config
         self.stats = internal.create_endpoint_stats(config)
         self.info = internal.create_endpoint_info(config)
@@ -70,15 +102,6 @@ class Group:
     """
 
     def __init__(self, config: internal.GroupConfig, service: Service) -> None:
-        """
-        Create a new group. This is used internally by the service.
-
-        In order to create a group, use `add_group` on a service
-        or a group.
-
-        Args:
-            config: The group configuration.
-        """
         self._config = config
         self._service = service
 
@@ -145,18 +168,8 @@ class Service:
         self,
         nc: NatsClient,
         config: internal.ServiceConfig,
-        api_prefix: str = API_PREFIX,
+        api_prefix: str,
     ) -> None:
-        """
-        Create a new service.
-
-        Users should not create a service directly but use `create_service` instead.
-
-        Args:
-            nc: The NATS client.
-            config: The service configuration.
-            api_prefix: The prefix of the control subjects.
-        """
         self._nc = nc
         self._config = config
         self._api_prefix = api_prefix
@@ -396,44 +409,3 @@ class Service:
     async def __aexit__(self, *args: object, **kwargs: object) -> None:
         """Implement the asynchronous context manager interface."""
         await self.stop()
-
-
-def add_service(
-    nc: NatsClient,
-    name: str,
-    version: str,
-    description: str | None = None,
-    metadata: dict[str, str] | None = None,
-    queue_group: str | None = None,
-    api_prefix: str | None = None,
-) -> Service:
-    """Create a new service.
-
-    A service is a collection of endpoints that are grouped together
-    under a common name.
-
-    Each endpoint is a request-reply handler for a subject.
-
-    It's possible to add endpoints to a service after it has been created AND
-    started.
-
-    Args:
-        nc: The NATS client.
-        name: The name of the service.
-        version: The version of the service. Must be a valid semver version.
-        description: The description of the service.
-        metadata: The metadata of the service.
-        api_prefix: The prefix of the control subjects.
-    """
-
-    config = internal.ServiceConfig(
-        name=name,
-        version=version,
-        description=description or "",
-        metadata=metadata or {},
-        queue_group=queue_group or DEFAULT_QUEUE_GROUP,
-        pending_bytes_limit_by_endpoint=DEFAULT_SUB_PENDING_BYTES_LIMIT,
-        pending_msgs_limit_by_endpoint=DEFAULT_SUB_PENDING_MSGS_LIMIT,
-    )
-    srv = Service(nc=nc, config=config, api_prefix=api_prefix or API_PREFIX)
-    return srv

@@ -18,6 +18,7 @@ class Request(metaclass=abc.ABCMeta):
     It makes it easy to test a service by using a stub implementation of Request.
 
     Four methods must be implemented:
+
     - `def subject() -> str`: the subject on which the request was received.
     - `def headers() -> dict[str, str]`: the headers of the request.
     - `def data() -> bytes`: the data of the request.
@@ -111,7 +112,6 @@ class NatsRequest(Request):
         """Send a success response to the request.
 
         Args:
-            code: The response code.
             data: The response data.
             headers: Additional response headers.
         """
