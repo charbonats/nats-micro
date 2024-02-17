@@ -34,7 +34,7 @@ pip install git+https://github.com/charbonnierg/nats-micro.git
 
 The API is inspired by the [Go micro package](https://pkg.go.dev/github.com/nats-io/nats.go/micro):
 
-- In order to use the package, you need to create a NATS connection using the [nats.aio](https://nats-io.github.io/nats.py/) package:
+- In order to use the package, you need to create a NATS connection using the [nats-py](https://nats-io.github.io/nats.py/) package:
 
 ```python
 from nats.aio.client import Client
