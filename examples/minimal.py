@@ -33,14 +33,14 @@ async def main():
         # The service will be stopped and drain its subscriptions before
         # closing the connection.
         service = await stack.enter_async_context(
-            micro.create_service(
+            micro.add_service(
                 nc,
                 name="demo-service",
                 version="1.0.0",
                 description="Demo service",
             )
         )
-        group = service.group("demo")
+        group = service.add_group("demo")
         # Add an endpoint to the service
         await group.add_endpoint(
             name="echo",
