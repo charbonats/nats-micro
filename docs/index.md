@@ -30,6 +30,86 @@ A typescript implementation is available in [nats.deno](https://github.com/nats-
 pip install git+https://github.com/charbonnierg/nats-micro.git
 ```
 
+## API Proposal
+
+The API is inspired by the [Go micro package](https://pkg.go.dev/github.com/nats-io/nats.go/micro):
+
+- Create a new service with `micro.add_service`:
+
+```python
+import micro
+
+service = micro.add_service(
+    nc,
+    name="demo-service",
+    version="1.0.0",
+    description="Demo service",
+)
+```
+
+- Unlike the Go implementation, the service is not started automatically. You need to call `service.start()` to start the service, or use it as an async context manager which allows to both create and start the service in a single line:
+
+```python
+async with micro.add_service(
+    nc,
+    name="demo-service",
+    version="1.0.0",
+    description="Demo service",
+) as service:
+    ...
+```
+
+- Once service is started, you can add endpoints to the service:
+
+```python
+async def echo(req: micro.Request) -> None:
+    """Echo the request data back to the client."""
+    await req.respond(req.data())
+
+
+await service.add_endpoint(
+    name="echo",
+    handler=echo,
+)
+```
+
+As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#endpoints), an endpoint must provide at least a name and a handler. The handler is a coroutine that takes a `micro.Request` as its only argument and returns `None`.
+
+If no subject is provided, the endpoint will use the service name as the subject. It's possible to provide a subject with the `subject` argument:
+
+```python
+await service.add_endpoint(
+    name="echo",
+    handler=echo,
+    subject="ECHO",
+)
+```
+
+- You can also add groups to the service:
+
+```python
+group = service.add_group("demo")
+```
+
+As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#groups), a group serves as a common prefix to all endpoints registered in it.
+
+- You can add endpoints to a group:
+
+```python
+await group.add_endpoint(
+    name="echo",
+    handler=echo,
+)
+```
+
+This is equivalent to adding an endpoint to the service with the subject prefixed by the group name.
+
+- Once you're done, you can stop the service with `service.stop()` if it was not used as an async context manager:
+
+```python
+await service.stop()
+```
+
 ## Example usage
 
 
