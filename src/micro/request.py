@@ -1,13 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass
-
-from typing import Awaitable, Callable
-from typing_extensions import TypeAlias
-
-from nats.aio.msg import Msg
 
 import abc
+from dataclasses import dataclass
+from typing import Awaitable, Callable
 
+from nats.aio.msg import Msg
+from typing_extensions import TypeAlias
 
 Handler: TypeAlias = Callable[["Request"], Awaitable[None]]
 """Handler is a function that processes a micro request."""

@@ -1,7 +1,6 @@
-from .api import add_service, Endpoint, Group, Service
-from .models import ServiceInfo, ServiceStats, EndpointInfo, EndpointStats
+from .api import Endpoint, Group, Service, add_service
+from .models import EndpointInfo, EndpointStats, ServiceInfo, ServiceStats
 from .request import Request
-
 
 __all__ = [
     "add_service",

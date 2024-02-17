@@ -27,8 +27,7 @@ from nats.aio.subscription import (
 
 from . import internal
 from .models import ServiceInfo, ServiceStats
-from .request import NatsRequest, Handler
-
+from .request import Handler, NatsRequest
 
 DEFAULT_QUEUE_GROUP = "q"
 """Queue Group name used across all services."""

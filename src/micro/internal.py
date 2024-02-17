@@ -10,19 +10,13 @@ A typescript implementation is available in [nats.deno](https://github.com/nats-
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-import time
 
+from .models import EndpointInfo, EndpointStats, PingInfo, ServiceInfo, ServiceStats
 from .request import Handler
-from .models import (
-    EndpointInfo,
-    EndpointStats,
-    PingInfo,
-    ServiceInfo,
-    ServiceStats,
-)
 
 
 class ServiceVerb(str, Enum):
