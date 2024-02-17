@@ -34,7 +34,7 @@ pip install git+https://github.com/charbonnierg/nats-micro.git
 
 The API is inspired by the [Go micro package](https://pkg.go.dev/github.com/nats-io/nats.go/micro):
 
-- Create a new service with `micro.add_service`:
+- Create a new service with [`micro.add_service`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.add_service):
 
 ```python
 import micro
@@ -47,7 +47,7 @@ service = micro.add_service(
 )
 ```
 
-- Unlike the Go implementation, the service is not started automatically. You need to call `service.start()` to start the service, or use it as an async context manager which allows to both create and start the service in a single line:
+- Unlike the Go implementation, the service is not started automatically. You need to call [`service.start`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.start) to start the service, or use the service as an async context manager which allows to both create and start the service in a single line:
 
 ```python
 async with micro.add_service(
@@ -59,7 +59,7 @@ async with micro.add_service(
     ...
 ```
 
-- Once service is started, you can add endpoints to the service:
+- Once service is started, you can add endpoints to the service using [`Service.add_endpoint`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.add_endpoint):
 
 ```python
 async def echo(req: micro.Request) -> None:
@@ -73,7 +73,7 @@ await service.add_endpoint(
 )
 ```
 
-As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#endpoints), an endpoint must provide at least a name and a handler. The handler is a coroutine that takes a `micro.Request` as its only argument and returns `None`.
+As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#endpoints), an endpoint must provide at least a name and a handler. The handler is a coroutine that takes a [`micro.Request`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Request) as its only argument and returns `None`.
 
 If no subject is provided, the endpoint will use the service name as the subject. It's possible to provide a subject with the `subject` argument:
 
@@ -85,15 +85,15 @@ await service.add_endpoint(
 )
 ```
 
-- You can also add groups to the service:
+- You can also add [groups](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group) to the service:
 
 ```python
 group = service.add_group("demo")
 ```
 
-As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#groups), a group serves as a common prefix to all endpoints registered in it.
+As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#groups), a [group](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group) serves as a common prefix to all endpoints registered in it.
 
-- You can add endpoints to a group:
+- You can add endpoints to a group using [`Group.add_endpoint`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group.add_endpoint)
 
 ```python
 await group.add_endpoint(
@@ -104,10 +104,16 @@ await group.add_endpoint(
 
 This is equivalent to adding an endpoint to the service with the subject prefixed by the group name.
 
-- Once you're done, you can stop the service with `service.stop()` if it was not used as an async context manager:
+- Once you're done, you can stop the service with [`service.stop()`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stop) if it was not used as an async context manager:
 
 ```python
 await service.stop()
+```
+
+- You can check if the stop() method was called with [`service.stopped`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stopped):
+
+```python
+assert service.stopped
 ```
 
 ## Example usage
