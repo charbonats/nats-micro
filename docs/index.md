@@ -6,13 +6,17 @@
 !!!bug "This is an experimental project"
     This project is a prototype and should not be used for anything serious. It is not tested, nor is it guaranteed to be correct.
 
-The `micro` package provides a simple way to create a microservice using the NATS messaging system.
+The [micro](https://pkg.go.dev/github.com/nats-io/nats.go/micro) package in the [NATS.go](https://github.com/nats-io/nats.go) library provides a simple way to create microservices that leverage NATS for scalability, load management and observability.
 
-It is documented in [ADR-32: Service API](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md).
+This project is an attempt to implement the same API in Python.
 
-The reference implementation is in [nats.go](https://github.com/nats-io/nats.go) under [micro package](https://pkg.go.dev/github.com/nats-io/nats.go/micro).
+## References
 
-A typescript implementation is available in [nats.deno](https://github.com/nats-io/nats.deno/blob/main/nats-base-client/service.ts)
+- The reference document for NATS Micro is the [ADR-32: Service API](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md).
+
+- The reference implementation is the [Go micro package](https://pkg.go.dev/github.com/nats-io/nats.go/micro).
+
+- A typescript implementation is available in [nats.deno](https://github.com/nats-io/nats.deno/blob/main/nats-base-client/service.ts)
 
 ## Why does this exist ?
 
