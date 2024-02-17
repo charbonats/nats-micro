@@ -46,7 +46,7 @@ async def main():
             name="echo",
             handler=echo,
         )
-        # Wait for the service to close
+        # Wait for the quit event
         await quit_event.wait()
 
 
