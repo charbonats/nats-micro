@@ -4,7 +4,7 @@
     This is a personal project and is not endorsed by the NATS.io community. It is not guaranteed to be maintained or supported.
 
 !!!bug "This is an experimental project"
-    This project is in an early stage of development and is not ready for production use. It is not tested, nor is it guaranteed to be correct.
+    This project is a prototype and should not be used for anything serious. It is not tested, nor is it guaranteed to be correct.
 
 The `micro` package provides a simple way to create a microservice using the NATS messaging system.
 
