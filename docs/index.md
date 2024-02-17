@@ -112,6 +112,8 @@ await service.stop()
 
 ## Example usage
 
+This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.
+
 
 ```python
 import asyncio
