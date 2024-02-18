@@ -32,11 +32,12 @@ def _get_internal_subject(
     api_prefix: str,
 ) -> str:
     """Get the internal subject for a verb."""
+    verb_literal = verb.value
     if service:
         if id:
-            return f"{api_prefix}.{verb}.{service}.{id}"
-        return f"{api_prefix}.{verb}.{service}"
-    return f"{api_prefix}.{verb}"
+            return f"{api_prefix}.{verb_literal}.{service}.{id}"
+        return f"{api_prefix}.{verb_literal}.{service}"
+    return f"{api_prefix}.{verb_literal}"
 
 
 def get_internal_subjects(
