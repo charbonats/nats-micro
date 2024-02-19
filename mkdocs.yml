@@ -5,6 +5,7 @@ theme:
   name: material
   features:
     - content.code.annotate
+    - content.code.copy
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -25,6 +26,7 @@ plugins:
         - docs/_scripts/gen_ref_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
+  - termynal
   - section-index
   - mkdocstrings:
       handlers:
@@ -38,6 +40,7 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences
   - pymdownx.magiclink
   - pymdownx.details

@@ -30,8 +30,10 @@ This project is an attempt to implement the same API in Python.
 
 ## How to install
 
+<!-- termynal -->
+
 ```bash
-pip install git+https://github.com/charbonnierg/nats-micro.git
+$ pip install git+https://github.com/charbonnierg/nats-micro.git
 ```
 
 ## API Proposal
@@ -40,7 +42,7 @@ The API is inspired by the [Go micro package](https://pkg.go.dev/github.com/nats
 
 - In order to use the package, you need to create a NATS connection using the [nats-py](https://nats-io.github.io/nats.py/) package:
 
-```python
+``` py
 from nats.aio.client import Client
 
 # Somewhere in an async function
@@ -49,7 +51,7 @@ nc = await Client().connect("nats://localhost:4222")
 
 - Create a new service with [`micro.add_service`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.add_service):
 
-```python
+``` py
 service = micro.add_service(
     nc,
     name="demo-service",
@@ -60,7 +62,7 @@ service = micro.add_service(
 
 - Unlike the Go implementation, the service is not started automatically. You need to call [`service.start`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.start) to start the service, or use the service as an async context manager which allows to both create and start the service in a single line:
 
-```python
+``` py
 async with micro.add_service(
     nc,
     name="demo-service",
@@ -72,7 +74,7 @@ async with micro.add_service(
 
 - Once service is started, you can add endpoints to the service using [`Service.add_endpoint`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.add_endpoint):
 
-```python
+``` py
 async def echo(req: micro.Request) -> None:
     """Echo the request data back to the client."""
     await req.respond(req.data())
@@ -88,7 +90,7 @@ As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/
 
 If no subject is provided, the endpoint will use the service name as the subject. It's possible to provide a subject with the `subject` argument:
 
-```python
+``` py
 await service.add_endpoint(
     name="echo",
     handler=echo,
@@ -98,7 +100,7 @@ await service.add_endpoint(
 
 - You can also add [groups](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group) to the service:
 
-```python
+``` py
 group = service.add_group("demo")
 ```
 
@@ -106,7 +108,7 @@ As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/
 
 - You can add endpoints to a group using [`Group.add_endpoint`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group.add_endpoint)
 
-```python
+``` py
 await group.add_endpoint(
     name="echo",
     handler=echo,
@@ -117,13 +119,13 @@ This is equivalent to adding an endpoint to the service with the subject prefixe
 
 - Once you're done, you can stop the service with [`service.stop()`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stop) if it was not used as an async context manager:
 
-```python
+``` py
 await service.stop()
 ```
 
 - You can check if the stop() method was called with [`service.stopped`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stopped):
 
-```python
+``` py
 assert service.stopped
 ```
 
@@ -132,7 +134,7 @@ assert service.stopped
 This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.
 
 
-```python
+``` py linenums="1" hl_lines="145-147" title="examples/minimal.py"
 import asyncio
 import contextlib
 import signal
@@ -185,4 +187,74 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
+
+After you've cloned the repo, you can run the example above with
+
+<!-- termynal -->
+
+```bash
+$ python examples/minimal.py
+```
+
+Once the service is running, you can use the `nats` CLI tool to send a request to the `demo.echo` subject:
+
+<!-- termynal -->
+
+```bash
+$ nats req demo.echo "Hello, world!"
+
+21:14:34 Sending request on "demo.echo"
+21:14:34 Received with rtt 5.1048ms
+Hello, World!
+```
+
+You should receive the same message back from the service.
+
+You can also use the `nats` CLI tool to discover the service:
+
+<!-- termynal -->
+
+```bash
+$ nats micro ls
+
+╭──────────────────────────────────────────────────────────────────╮
+│                        All Micro Services                        │
+├──────────────┬─────────┬──────────────────────────┬──────────────┤
+│ Name         │ Version │ ID                       │ Description  │
+├──────────────┼─────────┼──────────────────────────┼──────────────┤
+│ demo-service │ 1.0.0   │ ec17c596d93a7f3dafce9570 │ Demo service │
+╰──────────────┴─────────┴──────────────────────────┴──────────────╯
+```
+
+
+You can also use the `nats` CLI tool to request service stats:
+
+<!-- termynal -->
+
+```bash
+$ nats micro info demo-service
+
+Service Information
+
+        Service: demo-service (ec17c596d93a7f3dafce9570)
+    Description: Demo service
+        Version: 1.0.0
+
+Endpoints:
+
+            Name: echo
+            Subject: demo.echo
+        Queue Group: q
+
+Statistics for 1 Endpoint(s):
+
+echo Endpoint Statistics:
+
+        Requests: 0 in group q
+    Processing Time: 0s (average 0s)
+            Started: 2024-02-17 13:51:46 (51.15s ago)
+            Errors: 0
+
+Endpoint Specific Statistics:
 ```
