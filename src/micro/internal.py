@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from json import dumps
 
@@ -239,6 +239,11 @@ def encode_stats(stats: ServiceStats) -> bytes:
 
 def encode_info(info: ServiceInfo) -> bytes:
     return dumps(asdict(info), separators=(",", ":")).encode()
+
+
+def default_clock() -> datetime:
+    """A default clock implementation."""
+    return datetime.now(timezone.utc)
 
 
 class Timer:

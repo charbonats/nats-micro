@@ -151,30 +151,30 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 	<tbody><tr>
 		<th>Python</th>
 		<th>7</th>
-		<th>987</th>
-		<th>108</th>
-		<th>194</th>
-		<th>685</th>
+		<th>1013</th>
+		<th>107</th>
+		<th>213</th>
+		<th>693</th>
 		<th>36</th>
-		<th>32356</th>
+		<th>33264</th>
 	</tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
 		<td></td>
-		<td>429</td>
-		<td>40</td>
-		<td>116</td>
-		<td>273</td>
+		<td>450</td>
+		<td>39</td>
+		<td>135</td>
+		<td>276</td>
 		<td>21</td>
-	    <td>16098</td>
+	    <td>16881</td>
 	</tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
 		<td></td>
-		<td>251</td>
+		<td>256</td>
 		<td>30</td>
 		<td>39</td>
-		<td>182</td>
+		<td>187</td>
 		<td>7</td>
-	    <td>7120</td>
+	    <td>7245</td>
 	</tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
 		<td></td>
@@ -185,7 +185,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>2</td>
 	    <td>3826</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
+		<td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
 		<td></td>
 		<td>87</td>
 		<td>20</td>
@@ -212,7 +212,8 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>0</td>
 	    <td>332</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>		<td></td>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>
+		<td></td>
 		<td>1</td>
 		<td>0</td>
 		<td>0</td>
@@ -223,16 +224,16 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 	<tfoot><tr>
 		<th>Total</th>
 		<th>7</th>
-		<th>987</th>
-		<th>108</th>
-		<th>194</th>
-		<th>685</th>
+		<th>1013</th>
+		<th>107</th>
+		<th>213</th>
+		<th>693</th>
 		<th>36</th>
-    	<th>32356</th>
+    	<th>33264</th>
 	</tr></tfoot>
-	</table>
+</table>
 
-As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 35. The [`api.py`](https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py) file is the most complex but should still be easy to understand.
+As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 36. The [`api.py`](https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py) file is the most complex but should still be easy to understand.
 
 
 ## Example usage

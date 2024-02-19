@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import datetime
 from json import dumps
 from secrets import token_hex
 from typing import Awaitable, Callable
@@ -43,8 +43,9 @@ def add_service(
     description: str | None = None,
     metadata: dict[str, str] | None = None,
     queue_group: str | None = None,
+    now: Callable[[], datetime] | None = None,
+    generate_id: Callable[[], str] | None = None,
     api_prefix: str | None = None,
-    id_generator: Callable[[], str] | None = None,
 ) -> Service:
     """Create a new service.
 
@@ -63,11 +64,12 @@ def add_service(
         description: The description of the service.
         metadata: The metadata of the service.
         queue_group: The default queue group of the service.
-        api_prefix: The prefix of the control subjects.
+        now: The function to get the current time.
         id_generator: The function to generate a unique service instance id.
+        api_prefix: The prefix of the control subjects.
     """
-    if id_generator is None:
-        id_generator = token_hex
+    if generate_id is None:
+        generate_id = token_hex
     instance_id = token_hex(12)
     service_config = internal.ServiceConfig(
         name=name,
@@ -83,6 +85,7 @@ def add_service(
         id=instance_id,
         config=service_config,
         api_prefix=api_prefix or API_PREFIX,
+        clock=now or internal.default_clock,
     )
 
 
@@ -192,12 +195,12 @@ class Service:
         id: str,
         config: internal.ServiceConfig,
         api_prefix: str,
-        clock: Callable[[], datetime] | None = None,
+        clock: Callable[[], datetime],
     ) -> None:
         self._nc = nc
         self._config = config
         self._api_prefix = api_prefix
-        self._clock = clock or (lambda: datetime.now(timezone.utc))
+        self._clock = clock
         # Initialize state
         self._id = id
         self._endpoints: list[Endpoint] = []
@@ -221,6 +224,10 @@ class Service:
         This will start the internal subscriptions and enable
         service discovery.
         """
+        # Start PING subscriptions:
+        # - $SRV.PING
+        # - $SRV.{name}.PING
+        # - $SRV.{name}.{id}.PING
         for subject in internal.get_internal_subjects(
             internal.ServiceVerb.PING,
             self._id,
@@ -232,7 +239,10 @@ class Service:
                 cb=self._handle_ping_request,
             )
             self._ping_subscriptions.append(sub)
-
+        # Start INFO subscriptions:
+        # - $SRV.INFO
+        # - $SRV.{name}.INFO
+        # - $SRV.{name}.{id}.INFO
         for subject in internal.get_internal_subjects(
             internal.ServiceVerb.INFO,
             self._id,
@@ -244,7 +254,10 @@ class Service:
                 cb=self._handle_info_request,
             )
             self._info_subscriptions.append(sub)
-
+        # Start STATS subscriptions:
+        # - $SRV.STATS
+        # - $SRV.{name}.STATS
+        # - $SRV.{name}.{id}.STATS
         for subject in internal.get_internal_subjects(
             internal.ServiceVerb.STATS,
             self._id,
@@ -263,9 +276,9 @@ class Service:
         This will stop all endpoints and internal subscriptions.
         """
         self._stopped = True
-        # Stop endpoints
+        # Stop all endpoints
         await asyncio.gather(*(ep.stop() for ep in self._endpoints))
-        # Stop internal subscriptions
+        # Stop all internal subscriptions
         await asyncio.gather(
             *(
                 sub.unsubscribe()
