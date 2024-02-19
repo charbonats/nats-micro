@@ -52,6 +52,9 @@ nc = await Client().connect("nats://localhost:4222")
 - Create a new service with [`micro.add_service`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.add_service):
 
 ``` py
+import micro
+
+
 service = micro.add_service(
     nc,
     name="demo-service",
