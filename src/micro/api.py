@@ -65,7 +65,7 @@ def add_service(
         metadata: The metadata of the service.
         queue_group: The default queue group of the service.
         now: The function to get the current time.
-        id_generator: The function to generate a unique service instance id.
+        generate_id: The function to generate a unique service instance id.
         api_prefix: The prefix of the control subjects.
     """
     if generate_id is None:
