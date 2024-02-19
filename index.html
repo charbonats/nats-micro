@@ -612,57 +612,98 @@
 <p>I used <a href="https://github.com/boyter/scc">scc</a> to count line of codes and get an idea of the complexity of the project:</p>
 <table id="scc-table">
     <thead><tr>
-        <th>Filename</th>
+        <th>Language</th>
+        <th>Files</th>
         <th>Lines</th>
         <th>Blank</th>
         <th>Comment</th>
         <th>Code</th>
         <th>Complexity</th>
+        <th>Bytes</th>
     </tr></thead>
+    <tbody><tr>
+        <th>Python</th>
+        <th>7</th>
+        <th>987</th>
+        <th>108</th>
+        <th>194</th>
+        <th>685</th>
+        <th>36</th>
+        <th>32356</th>
+    </tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
-        <td>411</td>
-        <td>38</td>
-        <td>108</td>
-        <td>265</td>
-        <td>20</td>
+        <td></td>
+        <td>429</td>
+        <td>40</td>
+        <td>116</td>
+        <td>273</td>
+        <td>21</td>
+        <td>16098</td>
     </tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
-        <td>240</td>
+        <td></td>
+        <td>251</td>
         <td>30</td>
         <td>39</td>
-        <td>171</td>
+        <td>182</td>
         <td>7</td>
+        <td>7120</td>
     </tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
+        <td></td>
         <td>124</td>
         <td>10</td>
         <td>29</td>
         <td>85</td>
         <td>2</td>
+        <td>3826</td>
     </tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
+        <td></td>
         <td>87</td>
         <td>20</td>
         <td>5</td>
         <td>62</td>
         <td>2</td>
+        <td>1834</td>
     </tr><tr>
         <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
+        <td></td>
         <td>80</td>
         <td>7</td>
         <td>5</td>
         <td>68</td>
         <td>4</td>
-    </tr>
+        <td>3120</td>
+    </tr><tr>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/__init__.py" target="_blank">src/micro/__init__.py</a></td>
+        <td></td>
+        <td>15</td>
+        <td>1</td>
+        <td>0</td>
+        <td>14</td>
+        <td>0</td>
+        <td>332</td>
+    </tr><tr>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>       <td></td>
+        <td>1</td>
+        <td>0</td>
+        <td>0</td>
+        <td>1</td>
+        <td>0</td>
+        <td>26</td>
+    </tr></tbody>
     <tfoot><tr>
         <th>Total</th>
-        <th>942</th>
-        <th>105</th>
-        <th>186</th>
-        <th>651</th>
-        <th>35</th>
+        <th>7</th>
+        <th>987</th>
+        <th>108</th>
+        <th>194</th>
+        <th>685</th>
+        <th>36</th>
+        <th>32356</th>
     </tr></tfoot>
-</table>
+    </table>
 
 <p>As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 35. The <a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py"><code>api.py</code></a> file is the most complex but should still be easy to understand.</p>
 <h2 id="example-usage">Example usage</h2>
