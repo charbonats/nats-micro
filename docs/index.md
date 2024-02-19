@@ -4,61 +4,7 @@
     This is a personal project and is not endorsed by the NATS.io community. It is not guaranteed to be maintained or supported.
 
 !!!bug "This is an experimental project"
-    This project is a prototype and should not be used for anything serious. It is not tested, nor is it guaranteed to be correct. However, it's less than 700 lines of code, and implementations details are decoupled from public API, so it can be easily reviewed:
-
-    <table id="scc-table">
-        <thead><tr>
-            <th>Filename</th>
-            <th>Lines</th>
-            <th>Blank</th>
-            <th>Comment</th>
-            <th>Code</th>
-            <th>Complexity</th>
-        </tr></thead>
-            <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
-            <td>411</td>
-            <td>38</td>
-            <td>108</td>
-            <td>265</td>
-            <td>20</td>
-        </tr><tr>
-            <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
-            <td>240</td>
-            <td>30</td>
-            <td>39</td>
-            <td>171</td>
-            <td>7</td>
-        </tr><tr>
-            <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
-            <td>124</td>
-            <td>10</td>
-            <td>29</td>
-            <td>85</td>
-            <td>2</td>
-        </tr><tr>
-            <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
-            <td>87</td>
-            <td>20</td>
-            <td>5</td>
-            <td>62</td>
-            <td>2</td>
-        </tr><tr>
-            <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
-            <td>80</td>
-            <td>7</td>
-            <td>5</td>
-            <td>68</td>
-            <td>4</td>
-        </tr>
-        <tfoot><tr>
-            <th>Total</th>
-            <th>942</th>
-            <th>105</th>
-            <th>186</th>
-            <th>651</th>
-            <th>35</th>
-        </tr></tfoot>
-    </table>
+    This project is a prototype and should not be used for anything serious. It is not tested, nor is it guaranteed to be correct.
 
 
 The [micro](https://pkg.go.dev/github.com/nats-io/nats.go/micro) package in the [NATS.go](https://github.com/nats-io/nats.go) library provides a simple way to create microservices that leverage NATS for scalability, load management and observability.
@@ -186,6 +132,67 @@ await service.stop()
 ``` py
 assert service.stopped
 ```
+
+## Code Complexity
+
+I used [scc](https://github.com/boyter/scc) to count line of codes and get an idea of the complexity of the project:
+
+<table id="scc-table">
+    <thead><tr>
+        <th>Filename</th>
+        <th>Lines</th>
+        <th>Blank</th>
+        <th>Comment</th>
+        <th>Code</th>
+        <th>Complexity</th>
+    </tr></thead>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
+        <td>411</td>
+        <td>38</td>
+        <td>108</td>
+        <td>265</td>
+        <td>20</td>
+    </tr><tr>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
+        <td>240</td>
+        <td>30</td>
+        <td>39</td>
+        <td>171</td>
+        <td>7</td>
+    </tr><tr>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
+        <td>124</td>
+        <td>10</td>
+        <td>29</td>
+        <td>85</td>
+        <td>2</td>
+    </tr><tr>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
+        <td>87</td>
+        <td>20</td>
+        <td>5</td>
+        <td>62</td>
+        <td>2</td>
+    </tr><tr>
+        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
+        <td>80</td>
+        <td>7</td>
+        <td>5</td>
+        <td>68</td>
+        <td>4</td>
+    </tr>
+    <tfoot><tr>
+        <th>Total</th>
+        <th>942</th>
+        <th>105</th>
+        <th>186</th>
+        <th>651</th>
+        <th>35</th>
+    </tr></tfoot>
+</table>
+
+As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 35. The [`api.py`](https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py) file is the most complex but should still be easy to understand.
+
 
 ## Example usage
 
