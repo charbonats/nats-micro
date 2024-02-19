@@ -46,6 +46,8 @@
     
       <link rel="stylesheet" href="assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="termynal.css">
+    
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -506,140 +508,203 @@
 <li>There is no test, and it may not be correct.</li>
 </ul>
 <h2 id="how-to-install">How to install</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/charbonnierg/nats-micro.git
-</code></pre></div>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">pip install git+https://github.com/charbonnierg/nats-micro.git</span><span data-ty></span></div>
+
 <h2 id="api-proposal">API Proposal</h2>
 <p>The API is inspired by the <a href="https://pkg.go.dev/github.com/nats-io/nats.go/micro">Go micro package</a>:</p>
 <ul>
 <li>In order to use the package, you need to create a NATS connection using the <a href="https://nats-io.github.io/nats.py/">nats-py</a> package:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">nats.aio.client</span> <span class="kn">import</span> <span class="n">Client</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Somewhere in an async function</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">nc</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Client</span><span class="p">()</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;nats://localhost:4222&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">nats.aio.client</span> <span class="kn">import</span> <span class="n">Client</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Somewhere in an async function</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">nc</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Client</span><span class="p">()</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;nats://localhost:4222&quot;</span><span class="p">)</span>
 </code></pre></div>
 <ul>
 <li>Create a new service with <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.add_service"><code>micro.add_service</code></a>:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">service</span> <span class="o">=</span> <span class="n">micro</span><span class="o">.</span><span class="n">add_service</span><span class="p">(</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">nc</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo-service&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Demo service&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">service</span> <span class="o">=</span> <span class="n">micro</span><span class="o">.</span><span class="n">add_service</span><span class="p">(</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">nc</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo-service&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Demo service&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">)</span>
 </code></pre></div>
 <ul>
 <li>Unlike the Go implementation, the service is not started automatically. You need to call <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.start"><code>service.start</code></a> to start the service, or use the service as an async context manager which allows to both create and start the service in a single line:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">async</span> <span class="k">with</span> <span class="n">micro</span><span class="o">.</span><span class="n">add_service</span><span class="p">(</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">nc</span><span class="p">,</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo-service&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Demo service&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span> <span class="k">as</span> <span class="n">service</span><span class="p">:</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="o">...</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">async</span> <span class="k">with</span> <span class="n">micro</span><span class="o">.</span><span class="n">add_service</span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">nc</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo-service&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Demo service&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">)</span> <span class="k">as</span> <span class="n">service</span><span class="p">:</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="o">...</span>
 </code></pre></div>
 <ul>
 <li>Once service is started, you can add endpoints to the service using <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.add_endpoint"><code>Service.add_endpoint</code></a>:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">micro</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Echo the request data back to the client.&quot;&quot;&quot;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">await</span> <span class="n">req</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">micro</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Echo the request data back to the client.&quot;&quot;&quot;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">await</span> <span class="n">req</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
 </code></pre></div>
 <p>As <a href="https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#endpoints">defined in the ADR</a>, an endpoint must provide at least a name and a handler. The handler is a coroutine that takes a <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Request"><code>micro.Request</code></a> as its only argument and returns <code>None</code>.</p>
 <p>If no subject is provided, the endpoint will use the service name as the subject. It's possible to provide a subject with the <code>subject</code> argument:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;ECHO&quot;</span><span class="p">,</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;ECHO&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">)</span>
 </code></pre></div>
 <ul>
 <li>You can also add <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group">groups</a> to the service:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">group</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;demo&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">group</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;demo&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>As <a href="https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#groups">defined in the ADR</a>, a <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group">group</a> serves as a common prefix to all endpoints registered in it.</p>
 <ul>
 <li>You can add endpoints to a group using <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group.add_endpoint"><code>Group.add_endpoint</code></a></li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">)</span>
 </code></pre></div>
 <p>This is equivalent to adding an endpoint to the service with the subject prefixed by the group name.</p>
 <ul>
 <li>Once you're done, you can stop the service with <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stop"><code>service.stop()</code></a> if it was not used as an async context manager:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 </code></pre></div>
 <ul>
 <li>You can check if the stop() method was called with <a href="https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stopped"><code>service.stopped</code></a>:</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">assert</span> <span class="n">service</span><span class="o">.</span><span class="n">stopped</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">assert</span> <span class="n">service</span><span class="o">.</span><span class="n">stopped</span>
 </code></pre></div>
 <h2 id="example-usage">Example usage</h2>
 <p>This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span> <span class="nn">asyncio</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">import</span> <span class="nn">contextlib</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="kn">import</span> <span class="nn">signal</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="kn">from</span> <span class="nn">nats.aio.client</span> <span class="kn">import</span> <span class="n">Client</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="kn">import</span> <span class="nn">micro</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">micro</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Echo the request data back to the client.&quot;&quot;&quot;</span>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="k">await</span> <span class="n">req</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
-<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>    <span class="c1"># Define an event to signal when to quit</span>
-<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>    <span class="n">quit_event</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
-<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>    <span class="c1"># Attach signal handler to the event loop</span>
-<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
-<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>    <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">):</span>
-<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>        <span class="n">loop</span><span class="o">.</span><span class="n">add_signal_handler</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">_</span><span class="p">:</span> <span class="n">quit_event</span><span class="o">.</span><span class="n">set</span><span class="p">())</span>
-<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>    <span class="c1"># Create an async exit stack</span>
-<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">AsyncExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
-<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>        <span class="c1"># Create a NATS client</span>
-<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>        <span class="n">nc</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
-<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>        <span class="c1"># Connect to NATS</span>
-<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>        <span class="k">await</span> <span class="n">nc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;nats://localhost:4222&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a>        <span class="c1"># Push the client.close() method into the stack to be called on exit</span>
-<a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a>        <span class="n">stack</span><span class="o">.</span><span class="n">push_async_callback</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
-<a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a>        <span class="c1"># Push a new micro service into the stack to be stopped on exit</span>
-<a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a>        <span class="c1"># The service will be stopped and drain its subscriptions before</span>
-<a id="__codelineno-10-32" name="__codelineno-10-32" href="#__codelineno-10-32"></a>        <span class="c1"># closing the connection.</span>
-<a id="__codelineno-10-33" name="__codelineno-10-33" href="#__codelineno-10-33"></a>        <span class="n">service</span> <span class="o">=</span> <span class="k">await</span> <span class="n">stack</span><span class="o">.</span><span class="n">enter_async_context</span><span class="p">(</span>
-<a id="__codelineno-10-34" name="__codelineno-10-34" href="#__codelineno-10-34"></a>            <span class="n">micro</span><span class="o">.</span><span class="n">add_service</span><span class="p">(</span>
-<a id="__codelineno-10-35" name="__codelineno-10-35" href="#__codelineno-10-35"></a>                <span class="n">nc</span><span class="p">,</span>
-<a id="__codelineno-10-36" name="__codelineno-10-36" href="#__codelineno-10-36"></a>                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo-service&quot;</span><span class="p">,</span>
-<a id="__codelineno-10-37" name="__codelineno-10-37" href="#__codelineno-10-37"></a>                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-10-38" name="__codelineno-10-38" href="#__codelineno-10-38"></a>                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Demo service&quot;</span><span class="p">,</span>
-<a id="__codelineno-10-39" name="__codelineno-10-39" href="#__codelineno-10-39"></a>            <span class="p">)</span>
-<a id="__codelineno-10-40" name="__codelineno-10-40" href="#__codelineno-10-40"></a>        <span class="p">)</span>
-<a id="__codelineno-10-41" name="__codelineno-10-41" href="#__codelineno-10-41"></a>        <span class="n">group</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;demo&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-42" name="__codelineno-10-42" href="#__codelineno-10-42"></a>        <span class="c1"># Add an endpoint to the service</span>
-<a id="__codelineno-10-43" name="__codelineno-10-43" href="#__codelineno-10-43"></a>        <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
-<a id="__codelineno-10-44" name="__codelineno-10-44" href="#__codelineno-10-44"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
-<a id="__codelineno-10-45" name="__codelineno-10-45" href="#__codelineno-10-45"></a>            <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
-<a id="__codelineno-10-46" name="__codelineno-10-46" href="#__codelineno-10-46"></a>        <span class="p">)</span>
-<a id="__codelineno-10-47" name="__codelineno-10-47" href="#__codelineno-10-47"></a>        <span class="c1"># Wait for the quit event</span>
-<a id="__codelineno-10-48" name="__codelineno-10-48" href="#__codelineno-10-48"></a>        <span class="k">await</span> <span class="n">quit_event</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-<a id="__codelineno-10-49" name="__codelineno-10-49" href="#__codelineno-10-49"></a>
-<a id="__codelineno-10-50" name="__codelineno-10-50" href="#__codelineno-10-50"></a>
-<a id="__codelineno-10-51" name="__codelineno-10-51" href="#__codelineno-10-51"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-<a id="__codelineno-10-52" name="__codelineno-10-52" href="#__codelineno-10-52"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
-</code></pre></div>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">examples/minimal.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-9-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-9-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-9-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-9-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-9-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-9-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-9-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-9-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-9-10">10</a></span>
+<span class="normal"><a href="#__codelineno-9-11">11</a></span>
+<span class="normal"><a href="#__codelineno-9-12">12</a></span>
+<span class="normal"><a href="#__codelineno-9-13">13</a></span>
+<span class="normal"><a href="#__codelineno-9-14">14</a></span>
+<span class="normal"><a href="#__codelineno-9-15">15</a></span>
+<span class="normal"><a href="#__codelineno-9-16">16</a></span>
+<span class="normal"><a href="#__codelineno-9-17">17</a></span>
+<span class="normal"><a href="#__codelineno-9-18">18</a></span>
+<span class="normal"><a href="#__codelineno-9-19">19</a></span>
+<span class="normal"><a href="#__codelineno-9-20">20</a></span>
+<span class="normal"><a href="#__codelineno-9-21">21</a></span>
+<span class="normal"><a href="#__codelineno-9-22">22</a></span>
+<span class="normal"><a href="#__codelineno-9-23">23</a></span>
+<span class="normal"><a href="#__codelineno-9-24">24</a></span>
+<span class="normal"><a href="#__codelineno-9-25">25</a></span>
+<span class="normal"><a href="#__codelineno-9-26">26</a></span>
+<span class="normal"><a href="#__codelineno-9-27">27</a></span>
+<span class="normal"><a href="#__codelineno-9-28">28</a></span>
+<span class="normal"><a href="#__codelineno-9-29">29</a></span>
+<span class="normal"><a href="#__codelineno-9-30">30</a></span>
+<span class="normal"><a href="#__codelineno-9-31">31</a></span>
+<span class="normal"><a href="#__codelineno-9-32">32</a></span>
+<span class="normal"><a href="#__codelineno-9-33">33</a></span>
+<span class="normal"><a href="#__codelineno-9-34">34</a></span>
+<span class="normal"><a href="#__codelineno-9-35">35</a></span>
+<span class="normal"><a href="#__codelineno-9-36">36</a></span>
+<span class="normal"><a href="#__codelineno-9-37">37</a></span>
+<span class="normal"><a href="#__codelineno-9-38">38</a></span>
+<span class="normal"><a href="#__codelineno-9-39">39</a></span>
+<span class="normal"><a href="#__codelineno-9-40">40</a></span>
+<span class="normal"><a href="#__codelineno-9-41">41</a></span>
+<span class="normal"><a href="#__codelineno-9-42">42</a></span>
+<span class="normal"><a href="#__codelineno-9-43">43</a></span>
+<span class="normal"><a href="#__codelineno-9-44">44</a></span>
+<span class="normal"><a href="#__codelineno-9-45">45</a></span>
+<span class="normal"><a href="#__codelineno-9-46">46</a></span>
+<span class="normal"><a href="#__codelineno-9-47">47</a></span>
+<span class="normal"><a href="#__codelineno-9-48">48</a></span>
+<span class="normal"><a href="#__codelineno-9-49">49</a></span>
+<span class="normal"><a href="#__codelineno-9-50">50</a></span>
+<span class="normal"><a href="#__codelineno-9-51">51</a></span>
+<span class="normal"><a href="#__codelineno-9-52">52</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="kn">import</span> <span class="nn">asyncio</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2"></a><span class="kn">import</span> <span class="nn">contextlib</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3"></a><span class="kn">import</span> <span class="nn">signal</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5"></a><span class="kn">from</span> <span class="nn">nats.aio.client</span> <span class="kn">import</span> <span class="n">Client</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7"></a><span class="kn">import</span> <span class="nn">micro</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8"></a>
+<a id="__codelineno-9-9" name="__codelineno-9-9"></a>
+<a id="__codelineno-9-10" name="__codelineno-9-10"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">micro</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Echo the request data back to the client.&quot;&quot;&quot;</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12"></a>    <span class="k">await</span> <span class="n">req</span><span class="o">.</span><span class="n">respond</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">data</span><span class="p">())</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14"></a>
+<a id="__codelineno-9-15" name="__codelineno-9-15"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16"></a>    <span class="c1"># Define an event to signal when to quit</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17"></a>    <span class="n">quit_event</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+<a id="__codelineno-9-18" name="__codelineno-9-18"></a>    <span class="c1"># Attach signal handler to the event loop</span>
+<a id="__codelineno-9-19" name="__codelineno-9-19"></a>    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20"></a>    <span class="k">for</span> <span class="n">sig</span> <span class="ow">in</span> <span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">):</span>
+<a id="__codelineno-9-21" name="__codelineno-9-21"></a>        <span class="n">loop</span><span class="o">.</span><span class="n">add_signal_handler</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">_</span><span class="p">:</span> <span class="n">quit_event</span><span class="o">.</span><span class="n">set</span><span class="p">())</span>
+<a id="__codelineno-9-22" name="__codelineno-9-22"></a>    <span class="c1"># Create an async exit stack</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23"></a>    <span class="k">async</span> <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">AsyncExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
+<a id="__codelineno-9-24" name="__codelineno-9-24"></a>        <span class="c1"># Create a NATS client</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25"></a>        <span class="n">nc</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+<a id="__codelineno-9-26" name="__codelineno-9-26"></a>        <span class="c1"># Connect to NATS</span>
+<a id="__codelineno-9-27" name="__codelineno-9-27"></a>        <span class="k">await</span> <span class="n">nc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;nats://localhost:4222&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-28" name="__codelineno-9-28"></a>        <span class="c1"># Push the client.close() method into the stack to be called on exit</span>
+<a id="__codelineno-9-29" name="__codelineno-9-29"></a>        <span class="n">stack</span><span class="o">.</span><span class="n">push_async_callback</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
+<a id="__codelineno-9-30" name="__codelineno-9-30"></a>        <span class="c1"># Push a new micro service into the stack to be stopped on exit</span>
+<a id="__codelineno-9-31" name="__codelineno-9-31"></a>        <span class="c1"># The service will be stopped and drain its subscriptions before</span>
+<a id="__codelineno-9-32" name="__codelineno-9-32"></a>        <span class="c1"># closing the connection.</span>
+<a id="__codelineno-9-33" name="__codelineno-9-33"></a>        <span class="n">service</span> <span class="o">=</span> <span class="k">await</span> <span class="n">stack</span><span class="o">.</span><span class="n">enter_async_context</span><span class="p">(</span>
+<a id="__codelineno-9-34" name="__codelineno-9-34"></a>            <span class="n">micro</span><span class="o">.</span><span class="n">add_service</span><span class="p">(</span>
+<a id="__codelineno-9-35" name="__codelineno-9-35"></a>                <span class="n">nc</span><span class="p">,</span>
+<a id="__codelineno-9-36" name="__codelineno-9-36"></a>                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;demo-service&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-37" name="__codelineno-9-37"></a>                <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-38" name="__codelineno-9-38"></a>                <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Demo service&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-39" name="__codelineno-9-39"></a>            <span class="p">)</span>
+<a id="__codelineno-9-40" name="__codelineno-9-40"></a>        <span class="p">)</span>
+<a id="__codelineno-9-41" name="__codelineno-9-41"></a>        <span class="n">group</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;demo&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-42" name="__codelineno-9-42"></a>        <span class="c1"># Add an endpoint to the service</span>
+<a id="__codelineno-9-43" name="__codelineno-9-43"></a>        <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">add_endpoint</span><span class="p">(</span>
+<a id="__codelineno-9-44" name="__codelineno-9-44"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-45" name="__codelineno-9-45"></a>            <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
+<a id="__codelineno-9-46" name="__codelineno-9-46"></a>        <span class="p">)</span>
+<a id="__codelineno-9-47" name="__codelineno-9-47"></a>        <span class="c1"># Wait for the quit event</span>
+<a id="__codelineno-9-48" name="__codelineno-9-48"></a>        <span class="k">await</span> <span class="n">quit_event</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<a id="__codelineno-9-49" name="__codelineno-9-49"></a>
+<a id="__codelineno-9-50" name="__codelineno-9-50"></a>
+<a id="__codelineno-9-51" name="__codelineno-9-51"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<a id="__codelineno-9-52" name="__codelineno-9-52"></a>    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+<p>After you've cloned the repo, you can run the example above with</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">python examples/minimal.py</span><span data-ty></span></div>
+
+<p>Once the service is running, you can use the <code>nats</code> CLI tool to send a request to the <code>demo.echo</code> subject:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">nats req demo.echo &quot;Hello, world!&quot;</span><span data-ty><br>21:14:34 Sending request on &quot;demo.echo&quot;<br>21:14:34 Received with rtt 5.1048ms<br>Hello, World!<br></span></div>
+
+<p>You should receive the same message back from the service.</p>
+<p>You can also use the <code>nats</code> CLI tool to discover the service:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">nats micro ls</span><span data-ty><br>╭──────────────────────────────────────────────────────────────────╮<br>│                        All Micro Services                        │<br>├──────────────┬─────────┬──────────────────────────┬──────────────┤<br>│ Name         │ Version │ ID                       │ Description  │<br>├──────────────┼─────────┼──────────────────────────┼──────────────┤<br>│ demo-service │ 1.0.0   │ ec17c596d93a7f3dafce9570 │ Demo service │<br>╰──────────────┴─────────┴──────────────────────────┴──────────────╯<br></span></div>
+
+<p>You can also use the <code>nats</code> CLI tool to request service stats:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">nats micro info demo-service</span><span data-ty><br>Service Information<br><br>        Service: demo-service (ec17c596d93a7f3dafce9570)<br>    Description: Demo service<br>        Version: 1.0.0<br><br>Endpoints:<br><br>            Name: echo<br>            Subject: demo.echo<br>        Queue Group: q<br><br>Statistics for 1 Endpoint(s):<br><br>echo Endpoint Statistics:<br><br>        Requests: 0 in group q<br>    Processing Time: 0s (average 0s)<br>            Started: 2024-02-17 13:51:46 (51.15s ago)<br>            Errors: 0<br><br>Endpoint Specific Statistics:<br></span></div>
 
 
 
@@ -686,10 +751,12 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.annotate"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.annotate", "content.code.copy"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="assets/javascripts/bundle.8fd75fb4.min.js"></script>
+      
+        <script src="termynal.js"></script>
       
     
   </body>
