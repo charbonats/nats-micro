@@ -44,6 +44,7 @@ def add_service(
     metadata: dict[str, str] | None = None,
     queue_group: str | None = None,
     api_prefix: str | None = None,
+    id_generator: Callable[[], str] | None = None,
 ) -> Service:
     """Create a new service.
 
@@ -61,10 +62,14 @@ def add_service(
         version: The version of the service. Must be a valid semver version.
         description: The description of the service.
         metadata: The metadata of the service.
+        queue_group: The default queue group of the service.
         api_prefix: The prefix of the control subjects.
+        id_generator: The function to generate a unique service instance id.
     """
-
-    config = internal.ServiceConfig(
+    if id_generator is None:
+        id_generator = token_hex
+    instance_id = token_hex(12)
+    service_config = internal.ServiceConfig(
         name=name,
         version=version,
         description=description or "",
@@ -73,8 +78,12 @@ def add_service(
         pending_bytes_limit_by_endpoint=DEFAULT_SUB_PENDING_BYTES_LIMIT,
         pending_msgs_limit_by_endpoint=DEFAULT_SUB_PENDING_MSGS_LIMIT,
     )
-    srv = Service(nc=nc, config=config, api_prefix=api_prefix or API_PREFIX)
-    return srv
+    return Service(
+        nc=nc,
+        id=instance_id,
+        config=service_config,
+        api_prefix=api_prefix or API_PREFIX,
+    )
 
 
 class Endpoint:
@@ -85,6 +94,11 @@ class Endpoint:
         self.stats = internal.create_endpoint_stats(config)
         self.info = internal.create_endpoint_info(config)
         self._sub: Subscription | None = None
+
+    def reset(self) -> None:
+        """Reset the endpoint statistics."""
+        self.stats = internal.create_endpoint_stats(self.config)
+        self.info = internal.create_endpoint_info(self.config)
 
     async def stop(self) -> None:
         """Stop the endpoint by draining its subscription."""
@@ -164,25 +178,34 @@ class Group:
 
 
 class Service:
+    """Services simplify the development of NATS micro-services.
+
+    Endpoints can be added to a service after it has been created and started.
+    Each endpoint is a request-reply handler for a subject.
+
+    Groups can be added to a service to group endpoints under a common prefix.
+    """
+
     def __init__(
         self,
         nc: NatsClient,
+        id: str,
         config: internal.ServiceConfig,
         api_prefix: str,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         self._nc = nc
         self._config = config
         self._api_prefix = api_prefix
+        self._clock = clock or (lambda: datetime.now(timezone.utc))
         # Initialize state
-        self._id = token_hex(12)
+        self._id = id
         self._endpoints: list[Endpoint] = []
         self._stopped = False
         # Internal responses
-        self._stats = internal.create_service_stats(
-            self._id, datetime.now(timezone.utc), config
-        )
-        self._info = internal.create_service_info(self._id, config)
-        self._ping_response = internal.create_ping_info(self._id, config)
+        self._stats = internal.new_service_stats(self._id, self._clock(), config)
+        self._info = internal.new_service_info(self._id, config)
+        self._ping_response = internal.new_ping_info(self._id, config)
         # Cache the serialized ping response
         self._ping_response_message = dumps(asdict(self._ping_response)).encode()
         # Internal subscriptions
@@ -270,17 +293,13 @@ class Service:
     def reset(self) -> None:
         """Resets all statistics (for all endpoints) on a service instance."""
         # Internal responses
-        self._stats = internal.create_service_stats(
-            self._id, datetime.now(timezone.utc), self._config
-        )
-        self._info = internal.create_service_info(self._id, self._config)
-        self._ping_response = internal.create_ping_info(self._id, self._config)
-        # Cache the serialized ping response
-        self._ping_response_message = dumps(asdict(self._ping_response)).encode()
+        self._stats = internal.new_service_stats(self._id, self._clock(), self._config)
+        self._info = internal.new_service_info(self._id, self._config)
+        self._ping_response = internal.new_ping_info(self._id, self._config)
+        self._ping_response_message = internal.encode_ping_info(self._ping_response)
         # Reset all endpoints
         for ep in self._endpoints:
-            ep.stats = internal.create_endpoint_stats(ep.config)
-            ep.info = internal.create_endpoint_info(ep.config)
+            ep.reset()
             self._endpoints.append(ep)
             self._stats.endpoints.append(ep.stats)
             self._info.endpoints.append(ep.info)
@@ -351,8 +370,11 @@ class Service:
             pending_bytes_limit=pending_bytes_limit,
             pending_msgs_limit=pending_msgs_limit,
         )
+        # Create the endpoint
         ep = Endpoint(config)
-        subscription_handler = self._create_handler(ep)
+        # Create the endpoint handler
+        subscription_handler = _create_handler(ep)
+        # Start the endpoint subscription
         subscription = (
             await self._nc.subscribe(  # pyright: ignore[reportUnknownMemberType]
                 config.subject,
@@ -360,8 +382,11 @@ class Service:
                 cb=subscription_handler,
             )
         )
+        # Attach the subscription to the endpoint
         ep._sub = subscription  # pyright: ignore[reportPrivateUsage]
+        # Append the endpoint to the service
         self._endpoints.append(ep)
+        # Append the endpoint to the service stats and info
         self._stats.endpoints.append(ep.stats)
         self._info.endpoints.append(ep.info)
         return ep
@@ -372,34 +397,11 @@ class Service:
 
     async def _handle_info_request(self, msg: Msg) -> None:
         """Handle the info message."""
-        await msg.respond(data=dumps(asdict(self._info)).encode())
+        await msg.respond(data=internal.encode_info(self._info))
 
     async def _handle_stats_request(self, msg: Msg) -> None:
         """Handle the stats message."""
-        await msg.respond(data=dumps(asdict(self._stats)).encode())
-
-    def _create_handler(self, endpoint: Endpoint) -> Callable[[Msg], Awaitable[None]]:
-        """Handle a message."""
-
-        async def handler(msg: Msg) -> None:
-            timer = internal.Timer()
-            endpoint.stats.num_requests += 1
-            request = NatsRequest(msg)
-            try:
-                await endpoint.config.handler(request)
-            except Exception as exc:
-                endpoint.stats.num_errors += 1
-                endpoint.stats.last_error = str(exc)
-                await request.respond_error(
-                    code=500,
-                    description="Internal Server Error",
-                )
-            endpoint.stats.processing_time += timer.elapsed_nanoseconds()
-            endpoint.stats.average_processing_time = int(
-                endpoint.stats.processing_time / endpoint.stats.num_requests
-            )
-
-        return handler
+        await msg.respond(data=internal.encode_stats(self._stats))
 
     async def __aenter__(self) -> Service:
         """Implement the asynchronous context manager interface."""
@@ -409,3 +411,27 @@ class Service:
     async def __aexit__(self, *args: object, **kwargs: object) -> None:
         """Implement the asynchronous context manager interface."""
         await self.stop()
+
+
+def _create_handler(endpoint: Endpoint) -> Callable[[Msg], Awaitable[None]]:
+    """A helper function called internally to create endpoint message handlers."""
+
+    async def handler(msg: Msg) -> None:
+        timer = internal.Timer()
+        endpoint.stats.num_requests += 1
+        request = NatsRequest(msg)
+        try:
+            await endpoint.config.handler(request)
+        except Exception as exc:
+            endpoint.stats.num_errors += 1
+            endpoint.stats.last_error = str(exc)
+            await request.respond_error(
+                code=500,
+                description="Internal Server Error",
+            )
+        endpoint.stats.processing_time += timer.elapsed_nanoseconds()
+        endpoint.stats.average_processing_time = int(
+            endpoint.stats.processing_time / endpoint.stats.num_requests
+        )
+
+    return handler

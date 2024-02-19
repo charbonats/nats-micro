@@ -11,9 +11,10 @@ A typescript implementation is available in [nats.deno](https://github.com/nats-
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
+from json import dumps
 
 from .models import EndpointInfo, EndpointStats, PingInfo, ServiceInfo, ServiceStats
 from .request import Handler
@@ -25,7 +26,7 @@ class ServiceVerb(str, Enum):
     STATS = "STATS"
 
 
-def _get_internal_subject(
+def get_internal_subject(
     verb: ServiceVerb,
     service: str | None,
     id: str | None,
@@ -48,11 +49,9 @@ def get_internal_subjects(
 ) -> list[str]:
     """Get the internal subjects for a verb."""
     return [
-        _get_internal_subject(verb, service=None, id=None, api_prefix=api_prefix),
-        _get_internal_subject(
-            verb, service=config.name, id=None, api_prefix=api_prefix
-        ),
-        _get_internal_subject(verb, service=config.name, id=id, api_prefix=api_prefix),
+        get_internal_subject(verb, service=None, id=None, api_prefix=api_prefix),
+        get_internal_subject(verb, service=config.name, id=None, api_prefix=api_prefix),
+        get_internal_subject(verb, service=config.name, id=id, api_prefix=api_prefix),
     ]
 
 
@@ -187,7 +186,7 @@ def create_endpoint_stats(config: EndpointConfig) -> EndpointStats:
     )
 
 
-def create_service_stats(
+def new_service_stats(
     id: str, started: datetime, config: ServiceConfig
 ) -> ServiceStats:
     return ServiceStats(
@@ -209,7 +208,7 @@ def create_endpoint_info(config: EndpointConfig) -> EndpointInfo:
     )
 
 
-def create_service_info(id: str, config: ServiceConfig) -> ServiceInfo:
+def new_service_info(id: str, config: ServiceConfig) -> ServiceInfo:
     return ServiceInfo(
         name=config.name,
         id=id,
@@ -221,13 +220,25 @@ def create_service_info(id: str, config: ServiceConfig) -> ServiceInfo:
     )
 
 
-def create_ping_info(id: str, config: ServiceConfig) -> PingInfo:
+def new_ping_info(id: str, config: ServiceConfig) -> PingInfo:
     return PingInfo(
         name=config.name,
         id=id,
         version=config.version,
         metadata=config.metadata,
     )
+
+
+def encode_ping_info(info: PingInfo) -> bytes:
+    return dumps(asdict(info), separators=(",", ":")).encode()
+
+
+def encode_stats(stats: ServiceStats) -> bytes:
+    return dumps(asdict(stats), separators=(",", ":")).encode()
+
+
+def encode_info(info: ServiceInfo) -> bytes:
+    return dumps(asdict(info), separators=(",", ":")).encode()
 
 
 class Timer:
