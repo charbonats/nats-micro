@@ -216,7 +216,6 @@ def new_service_info(id: str, config: ServiceConfig) -> ServiceInfo:
         description=config.description,
         metadata=config.metadata,
         endpoints=[],
-        data={},
     )
 
 
