@@ -365,3 +365,9 @@ echo Endpoint Statistics:
 
 Endpoint Specific Statistics:
 ```
+
+## Other works
+
+- [NATS Request Many](https://charbonats.github.io/nats-request-many)
+
+- [NATS Connect Opts](https://charbonats.github.io/nats-connect-opts)
