@@ -1,6 +1,6 @@
 import pytest
 
-from micro.testing import make_request
+from nats_contrib.micro.testing import make_request
 
 from .minimal import echo
 

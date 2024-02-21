@@ -48,7 +48,7 @@ docs = [
 ]
 
 [tool.setuptools.dynamic]
-version = { attr = "micro.__about__.__version__" }
+version = { attr = "nats_contrib.micro.__about__.__version__" }
 
 [tool.pyright]
 pythonVersion = "3.8"

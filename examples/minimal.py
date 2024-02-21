@@ -6,7 +6,7 @@ import signal
 
 from nats.aio.client import Client
 
-import micro
+from nats_contrib import micro
 
 
 async def echo(req: micro.Request) -> None:

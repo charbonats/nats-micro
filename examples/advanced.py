@@ -8,8 +8,8 @@ import signal
 
 from nats.aio.client import Client
 
-import micro
-from micro.utils import Context, run_until_first_complete
+from nats_contrib import micro
+from nats_contrib.micro.utils import Context, run_until_first_complete
 
 logging.basicConfig(
     level=logging.INFO,
