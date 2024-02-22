@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import AsyncContextManager, AsyncIterator
 
-from nats.aio.client import Client
+from nats.aio.client import Client as NATS
 from nats_contrib.request_many import (
     RequestManyExecutor,
     RequestManyIterator,
@@ -15,17 +15,46 @@ from .api import API_PREFIX
 from .models import PingInfo, ServiceInfo, ServiceStats
 
 
-class MicroClient:
+class ServiceError(Exception):
+    """Raised when a service error is received."""
+
+    def __init__(self, code: int, description: str) -> None:
+        super().__init__(f"Service error {code}: {description}")
+        self.code = code
+        self.description = description
+
+
+class Client:
 
     def __init__(
         self,
-        nc: Client,
+        nc: NATS,
         default_max_wait: float = 0.5,
         api_prefix: str = API_PREFIX,
     ) -> None:
         self.nc = nc
         self.api_prefix = api_prefix
         self.request_executor = RequestManyExecutor(nc, default_max_wait)
+
+    async def request(
+        self,
+        subject: str,
+        data: bytes | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float = 1,
+    ) -> bytes:
+        """Send a request and get the response."""
+        response = await self.nc.request(
+            subject, data or b"", headers=headers, timeout=timeout
+        )
+        if response.headers:
+            error_code = response.headers.get("Nats-Service-Error-Code")
+            if error_code:
+                raise ServiceError(
+                    int(error_code), response.headers.get("Nats-Service-Error", "")
+                )
+
+        return response.data
 
     async def ping(
         self,
@@ -158,7 +187,7 @@ class MicroClient:
         return self.Service(self, service)
 
     class Service:
-        def __init__(self, client: MicroClient, service: str) -> None:
+        def __init__(self, client: Client, service: str) -> None:
             self.client = client
             self.service = service
 
@@ -222,12 +251,12 @@ class MicroClient:
             """Get all service instance stats."""
             return self.client.astats(self.service, max_wait, max_count, max_interval)
 
-        def instance(self, id: str) -> MicroClient.Instance:
+        def instance(self, id: str) -> Client.Instance:
             """Get a client for a single service instance."""
-            return MicroClient.Instance(self.client, self.service, id)
+            return Client.Instance(self.client, self.service, id)
 
     class Instance:
-        def __init__(self, client: MicroClient, service: str, id: str) -> None:
+        def __init__(self, client: Client, service: str, id: str) -> None:
             self.client = client
             self.service = service
             self.id = id

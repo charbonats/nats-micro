@@ -437,7 +437,7 @@ def _create_handler(endpoint: Endpoint) -> Callable[[Msg], Awaitable[None]]:
             await endpoint.config.handler(request)
         except Exception as exc:
             endpoint.stats.num_errors += 1
-            endpoint.stats.last_error = str(exc)
+            endpoint.stats.last_error = repr(exc)
             await request.respond_error(
                 code=500,
                 description="Internal Server Error",
