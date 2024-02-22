@@ -22,7 +22,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dynamic = ["version"]
-dependencies = ["nats-py", "typing-extensions"]
+dependencies = ["nats-py", "nats-request-many", "typing-extensions"]
 
 [project.optional-dependencies]
 build = ["pip-tools", "build", "wheel"]
@@ -35,6 +35,7 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
+    "nats-test-server",
 ]
 docs = [
     "requests",

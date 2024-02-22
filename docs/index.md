@@ -34,7 +34,7 @@ This project is an attempt to implement the same API in Python.
 <!-- termynal -->
 
 ```bash
-$ pip install git+https://github.com/charbonnierg/nats-micro.git
+$ pip install git+https://github.com/charbonats/nats-micro.git
 ```
 
 ## API Proposal
@@ -50,7 +50,7 @@ from nats.aio.client import Client
 nc = await Client().connect("nats://localhost:4222")
 ```
 
-- Create a new service with [`micro.add_service`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.add_service):
+- Create a new service with [`micro.add_service`](https://charbonats.github.io/nats-micro/reference/micro/#micro.add_service):
 
 ``` py
 from nats_contrib import micro
@@ -64,7 +64,7 @@ service = micro.add_service(
 )
 ```
 
-- Unlike the Go implementation, the service is not started automatically. You need to call [`service.start`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.start) to start the service, or use the service as an async context manager which allows to both create and start the service in a single line:
+- Unlike the Go implementation, the service is not started automatically. You need to call [`service.start`](https://charbonats.github.io/nats-micro/reference/micro/#micro.Service.start) to start the service, or use the service as an async context manager which allows to both create and start the service in a single line:
 
 ``` py
 async with micro.add_service(
@@ -76,7 +76,7 @@ async with micro.add_service(
     ...
 ```
 
-- Once service is started, you can add endpoints to the service using [`Service.add_endpoint`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.add_endpoint):
+- Once service is started, you can add endpoints to the service using [`Service.add_endpoint`](https://charbonats.github.io/nats-micro/reference/micro/#micro.Service.add_endpoint):
 
 ``` py
 async def echo(req: micro.Request) -> None:
@@ -90,7 +90,7 @@ await service.add_endpoint(
 )
 ```
 
-As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#endpoints), an endpoint must provide at least a name and a handler. The handler is a coroutine that takes a [`micro.Request`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Request) as its only argument and returns `None`.
+As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#endpoints), an endpoint must provide at least a name and a handler. The handler is a coroutine that takes a [`micro.Request`](https://charbonats.github.io/nats-micro/reference/micro/#micro.Request) as its only argument and returns `None`.
 
 If no subject is provided, the endpoint will use the service name as the subject. It's possible to provide a subject with the `subject` argument:
 
@@ -102,15 +102,15 @@ await service.add_endpoint(
 )
 ```
 
-- You can also add [groups](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group) to the service:
+- You can also add [groups](https://charbonats.github.io/nats-micro/reference/micro/#micro.Group) to the service:
 
 ``` py
 group = service.add_group("demo")
 ```
 
-As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#groups), a [group](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group) serves as a common prefix to all endpoints registered in it.
+As [defined in the ADR](https://github.com/nats-io/nats-architecture-and-design/blob/main/adr/ADR-32.md#groups), a [group](https://charbonats.github.io/nats-micro/reference/micro/#micro.Group) serves as a common prefix to all endpoints registered in it.
 
-- You can add endpoints to a group using [`Group.add_endpoint`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Group.add_endpoint)
+- You can add endpoints to a group using [`Group.add_endpoint`](https://charbonats.github.io/nats-micro/reference/micro/#micro.Group.add_endpoint)
 
 ``` py
 await group.add_endpoint(
@@ -121,13 +121,13 @@ await group.add_endpoint(
 
 This is equivalent to adding an endpoint to the service with the subject prefixed by the group name.
 
-- Once you're done, you can stop the service with [`service.stop()`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stop) if it was not used as an async context manager:
+- Once you're done, you can stop the service with [`service.stop()`](https://charbonats.github.io/nats-micro/reference/micro/#micro.Service.stop) if it was not used as an async context manager:
 
 ``` py
 await service.stop()
 ```
 
-- You can check if the stop() method was called with [`service.stopped`](https://charbonnierg.github.io/nats-micro/reference/micro/#micro.Service.stopped):
+- You can check if the stop() method was called with [`service.stopped`](https://charbonats.github.io/nats-micro/reference/micro/#micro.Service.stopped):
 
 ``` py
 assert service.stopped
@@ -158,7 +158,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<th>36</th>
 		<th>33264</th>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
+        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
 		<td></td>
 		<td>450</td>
 		<td>39</td>
@@ -167,7 +167,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>21</td>
 	    <td>16881</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
+        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
 		<td></td>
 		<td>256</td>
 		<td>30</td>
@@ -176,7 +176,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>7</td>
 	    <td>7245</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
+        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
 		<td></td>
 		<td>124</td>
 		<td>10</td>
@@ -185,7 +185,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>2</td>
 	    <td>3826</td>
 	</tr><tr>
-		<td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
+		<td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
 		<td></td>
 		<td>87</td>
 		<td>20</td>
@@ -194,7 +194,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>2</td>
 	    <td>1834</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
+        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
 		<td></td>
 		<td>80</td>
 		<td>7</td>
@@ -203,7 +203,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>4</td>
 	    <td>3120</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/__init__.py" target="_blank">src/micro/__init__.py</a></td>
+        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/__init__.py" target="_blank">src/micro/__init__.py</a></td>
 		<td></td>
 		<td>15</td>
 		<td>1</td>
@@ -212,7 +212,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 		<td>0</td>
 	    <td>332</td>
 	</tr><tr>
-        <td><a href="https://github.com/charbonnierg/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>
+        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>
 		<td></td>
 		<td>1</td>
 		<td>0</td>
@@ -233,7 +233,7 @@ I used [scc](https://github.com/boyter/scc) to count line of codes and get an id
 	</tr></tfoot>
 </table>
 
-As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 36. The [`api.py`](https://github.com/charbonnierg/nats-micro/blob/main/src/micro/api.py) file is the most complex but should still be easy to understand.
+As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 36. The [`api.py`](https://github.com/charbonats/nats-micro/blob/main/src/micro/api.py) file is the most complex but should still be easy to understand.
 
 
 ## Example usage

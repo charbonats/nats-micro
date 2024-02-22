@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from micro.request import Request
+from nats_contrib.micro.request import Request
 
 
 class NoResponseError(Exception):

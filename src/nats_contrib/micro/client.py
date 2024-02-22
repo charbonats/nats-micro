@@ -4,11 +4,15 @@ import json
 from typing import AsyncContextManager, AsyncIterator
 
 from nats.aio.client import Client
+from nats_contrib.request_many import (
+    RequestManyExecutor,
+    RequestManyIterator,
+    transform,
+)
 
 from . import internal
 from .api import API_PREFIX
 from .models import PingInfo, ServiceInfo, ServiceStats
-from .request_many import TransformAsyncIterator, request_many, request_many_iterator
 
 
 class MicroClient:
@@ -21,6 +25,7 @@ class MicroClient:
     ) -> None:
         self.nc = nc
         self.api_prefix = api_prefix
+        self.request_executor = RequestManyExecutor(nc, default_max_wait)
 
     async def ping(
         self,
@@ -33,10 +38,8 @@ class MicroClient:
         subject = internal.get_internal_subject(
             internal.ServiceVerb.PING, service, None, self.api_prefix
         )
-        responses = await request_many(
-            self.nc,
+        responses = await self.request_executor(
             subject,
-            b"",
             max_count=max_count,
             max_wait=max_wait,
             max_interval=max_interval,
@@ -54,10 +57,8 @@ class MicroClient:
         subject = internal.get_internal_subject(
             internal.ServiceVerb.INFO, service, None, self.api_prefix
         )
-        responses = await request_many(
-            self.nc,
+        responses = await self.request_executor(
             subject,
-            b"",
             max_count=max_count,
             max_wait=max_wait,
             max_interval=max_interval,
@@ -75,10 +76,8 @@ class MicroClient:
         subject = internal.get_internal_subject(
             internal.ServiceVerb.STATS, service, None, self.api_prefix
         )
-        responses = await request_many(
-            self.nc,
+        responses = await self.request_executor(
             subject,
-            b"",
             max_count=max_count,
             max_wait=max_wait,
             max_interval=max_interval,
@@ -96,11 +95,11 @@ class MicroClient:
         subject = internal.get_internal_subject(
             internal.ServiceVerb.PING, service, None, self.api_prefix
         )
-        return TransformAsyncIterator(
-            request_many_iterator(
+        return transform(
+            RequestManyIterator(
                 self.nc,
                 subject,
-                b"",
+                inbox=self.nc.new_inbox(),
                 max_count=max_count,
                 max_wait=max_wait,
                 max_interval=max_interval,
@@ -119,11 +118,11 @@ class MicroClient:
         subject = internal.get_internal_subject(
             internal.ServiceVerb.INFO, service, None, self.api_prefix
         )
-        return TransformAsyncIterator(
-            request_many_iterator(
+        return transform(
+            RequestManyIterator(
                 self.nc,
                 subject,
-                b"",
+                inbox=self.nc.new_inbox(),
                 max_count=max_count,
                 max_wait=max_wait,
                 max_interval=max_interval,
@@ -142,11 +141,11 @@ class MicroClient:
         subject = internal.get_internal_subject(
             internal.ServiceVerb.STATS, service, None, self.api_prefix
         )
-        return TransformAsyncIterator(
-            request_many_iterator(
+        return transform(
+            RequestManyIterator(
                 self.nc,
                 subject,
-                b"",
+                inbox=self.nc.new_inbox(),
                 max_count=max_count,
                 max_wait=max_wait,
                 max_interval=max_interval,
@@ -235,39 +234,36 @@ class MicroClient:
 
         async def ping(
             self,
-            service: str,
-            id: str,
             timeout: float = 0.5,
         ) -> PingInfo:
             """Ping a service instance."""
             subject = internal.get_internal_subject(
-                internal.ServiceVerb.PING, service, id, self.client.api_prefix
+                internal.ServiceVerb.PING, self.service, self.id, self.client.api_prefix
             )
             response = await self.client.nc.request(subject, b"", timeout=timeout)
             return PingInfo.from_response(json.loads(response.data))
 
         async def info(
             self,
-            service: str,
-            id: str,
             timeout: float = 0.5,
         ) -> ServiceInfo:
             """Get the service instance information."""
             subject = internal.get_internal_subject(
-                internal.ServiceVerb.INFO, service, id, self.client.api_prefix
+                internal.ServiceVerb.INFO, self.service, self.id, self.client.api_prefix
             )
             response = await self.client.nc.request(subject, b"", timeout=timeout)
             return ServiceInfo.from_response(json.loads(response.data))
 
         async def stats(
             self,
-            service: str,
-            id: str,
             timeout: float = 0.5,
         ) -> ServiceStats:
             """Get the service instance stats."""
             subject = internal.get_internal_subject(
-                internal.ServiceVerb.STATS, service, id, self.client.api_prefix
+                internal.ServiceVerb.STATS,
+                self.service,
+                self.id,
+                self.client.api_prefix,
             )
             response = await self.client.nc.request(subject, b"", timeout=timeout)
             return ServiceStats.from_response(json.loads(response.data))
