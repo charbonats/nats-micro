@@ -70,7 +70,7 @@ def add_service(
     """
     if generate_id is None:
         generate_id = token_hex
-    instance_id = token_hex(12)
+    instance_id = generate_id()
     service_config = internal.ServiceConfig(
         name=name,
         version=version,
