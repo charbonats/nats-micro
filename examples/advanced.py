@@ -5,8 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import signal
+from typing import Any
 
 from nats.aio.client import Client
+from uvicorn import Config
 
 from nats_contrib import micro
 from nats_contrib.micro.utils import Context, run_until_first_complete
@@ -19,14 +21,14 @@ logging.basicConfig(
 logger = logging.getLogger("micro")
 
 
-async def echo(req: micro.Request) -> None:
+async def echo_handler(req: micro.Request) -> None:
     """Echo the request data back to the client."""
 
     logger.info("Echoing request data")
     await req.respond(req.data())
 
 
-async def setup(
+async def setup_service(
     ctx: Context,
     url: str,
     max_reconnect: int,
@@ -84,10 +86,52 @@ async def setup(
     # Add an endpoint to the group
     ep = await group.add_endpoint(
         name="echo",
-        handler=echo,
+        handler=echo_handler,
     )
     # Indicate that the service is ready to accept requests
     logger.info("service %s listenning on '%s'", service.info().name, ep.info.subject)
+
+
+async def setup_http_server(ctx: Context) -> None:
+    # FastAPI Uvicorn override
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse, Response
+
+    class Server(uvicorn.Server):
+        """A custom Uvicorn server that can be used as an async context manager."""
+
+        def __init__(self, config: Config) -> None:
+            super().__init__(config)
+            # Track the asyncio task used to run the server
+            self.task: asyncio.Task[None] | None = None
+
+        # Override because we're catching signals ourselves
+        def install_signal_handlers(self) -> None:
+            pass
+
+        async def __aenter__(self) -> "Server":
+            self.task = asyncio.create_task(self.serve())
+            return self
+
+        async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
+            self.should_exit = True
+            if self.task:
+                await self.task
+
+    # Create a new starlette app
+    app = Starlette()
+
+    # Create a dummy route
+    @app.route("/")
+    async def index(request: Request) -> Response:
+        return JSONResponse({"message": "Hello, World!"})
+
+    # Create a new server
+    server = Server(config=uvicorn.Config(app=app, loop="asyncio"))
+    # Run the server
+    await ctx.enter_context(server)
 
 
 async def main(
@@ -101,9 +145,11 @@ async def main(
         ctx.trap_signal(signal.Signals.SIGINT, signal.Signals.SIGTERM)
         # Setup the service
         await run_until_first_complete(
-            setup(ctx, url, max_reconnect),
+            setup_service(ctx, url, max_reconnect),
             ctx.wait(),
         )
+        # Setup the http server
+        await setup_http_server(ctx)
         # Wait for the context to be cancelled
         await ctx.wait()
 
