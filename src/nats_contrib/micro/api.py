@@ -24,6 +24,7 @@ from nats.aio.subscription import (
     DEFAULT_SUB_PENDING_MSGS_LIMIT,
     Subscription,
 )
+from nats.errors import BadSubscriptionError
 
 from . import internal
 from .models import ServiceInfo, ServiceStats
@@ -106,7 +107,7 @@ class Endpoint:
     async def stop(self) -> None:
         """Stop the endpoint by draining its subscription."""
         if self._sub:
-            await self._sub.drain()
+            await unsubscribe(self._sub)
             self._sub = None
 
 
@@ -281,7 +282,7 @@ class Service:
         # Stop all internal subscriptions
         await asyncio.gather(
             *(
-                sub.unsubscribe()
+                unsubscribe(sub)
                 for subscriptions in (
                     self._stats_subscriptions,
                     self._info_subscriptions,
@@ -305,13 +306,16 @@ class Service:
 
     def reset(self) -> None:
         """Resets all statistics (for all endpoints) on a service instance."""
+
         # Internal responses
         self._stats = internal.new_service_stats(self._id, self._clock(), self._config)
         self._info = internal.new_service_info(self._id, self._config)
         self._ping_response = internal.new_ping_info(self._id, self._config)
         self._ping_response_message = internal.encode_ping_info(self._ping_response)
         # Reset all endpoints
-        for ep in self._endpoints:
+        endpoints = list(self._endpoints)
+        self._endpoints.clear()
+        for ep in endpoints:
             ep.reset()
             self._endpoints.append(ep)
             self._stats.endpoints.append(ep.stats)
@@ -448,3 +452,10 @@ def _create_handler(endpoint: Endpoint) -> Callable[[Msg], Awaitable[None]]:
         )
 
     return handler
+
+
+async def unsubscribe(sub: Subscription) -> None:
+    try:
+        await sub.unsubscribe()
+    except BadSubscriptionError:
+        pass
