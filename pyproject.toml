@@ -36,6 +36,7 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "nats-test-server",
+    "pyright",
 ]
 docs = [
     "requests",

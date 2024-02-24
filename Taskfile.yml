@@ -1,0 +1,39 @@
+version: '3'
+
+tasks:
+  clean:
+    desc: "Clean the build files"
+    cmds:
+      - rm -rf build/ dist/ src/*.egg-info/ .pytest_cache/ .coverage
+      - rm -rf docs/coverage/
+  build:
+    desc: "Build the package"
+    cmds:
+      - python -m build
+  format:
+    desc: "Format the code using black and isort"
+    cmds:
+      - black src/ tests/ examples/
+      - isort src/ tests/ examples/
+  format:check:
+    desc: "Check the code formatting using black and isort"
+    cmds:
+      - black --check src/ tests/ examples/
+      - isort --check src/ tests/ examples/
+  lint:
+    desc: "Run static analysis using flake8 and pyright"
+    cmds:
+      - flake8 src/ tests/ examples/
+      - pyright src/ tests/ examples/
+    deps:
+      - format:check
+  test:
+    desc: "Run the tests using pytest"
+    cmds:
+      - pytest --cov src --cov-report html:docs/coverage -x
+  docs:
+    desc: "Build the documentation"
+    cmds:
+      - mkdocs build
+    deps:
+      - test
