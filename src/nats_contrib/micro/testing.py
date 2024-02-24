@@ -4,7 +4,14 @@ from nats_contrib.micro.request import Request
 
 
 class NoResponseError(Exception):
-    """Raised when the response is not available."""
+    """Raised when the response is not available.
+
+    This exception is never raised during normal operation.
+
+    It is only used during testing to detect when the response
+    has not been set by the micro handler and test attempts to
+    access the response data or headers.
+    """
 
 
 def make_request(
@@ -12,11 +19,26 @@ def make_request(
     data: bytes | None = None,
     headers: dict[str, str] | None = None,
 ) -> RequestStub:
-    """Create a request for testing."""
+    """Create a request for testing.
+
+    Args:
+        subject: The subject of the request.
+        data: The data of the request.
+        headers: The headers of the request.
+
+    Returns:
+        A request stub for testing.
+
+    Note:
+        A request stub can be used to call a micro handler directly
+        during test and to check the response data and headers.
+    """
     return RequestStub(subject, data, headers)
 
 
 class RequestStub(Request):
+    """A request stub for testing."""
+
     def __init__(
         self,
         subject: str,

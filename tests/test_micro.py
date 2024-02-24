@@ -166,6 +166,10 @@ class TestMicro(MicroTestSetup):
                 .ping()
             )
             assert result == expected
+            result = await self.micro_client.instance(
+                self.service_name(), self.service_id()
+            ).ping()
+            assert result == expected
 
     async def test_info(self) -> None:
         expected = micro.ServiceInfo(
@@ -199,6 +203,10 @@ class TestMicro(MicroTestSetup):
                 .instance(self.service_id())
                 .info()
             )
+            assert result == expected
+            result = await self.micro_client.instance(
+                self.service_name(), self.service_id()
+            ).info()
             assert result == expected
 
     async def test_stats(self) -> None:
@@ -234,6 +242,10 @@ class TestMicro(MicroTestSetup):
                 .instance(self.service_id())
                 .stats()
             )
+            assert result == expected
+            result = await self.micro_client.instance(
+                self.service_name(), self.service_id()
+            ).stats()
             assert result == expected
 
     async def test_info_getter(self) -> None:
@@ -347,6 +359,82 @@ class TestMicro(MicroTestSetup):
             with pytest.raises(RuntimeError) as exc:
                 await service.add_endpoint("endpoint1", self.handler)
             assert str(exc.value) == "Cannot add endpoint to a stopped service"
+
+
+class TestMicroClientIterators(MicroTestSetup):
+    async def test_ping(self) -> None:
+        expected = micro.models.PingInfo(
+            id=self.service_id(),
+            name=self.service_name(),
+            version=self.service_version(),
+            metadata={},
+            type="io.nats.micro.v1.ping_response",
+        )
+        async with micro.add_service(
+            self.nats_client,
+            self.service_name(),
+            self.service_version(),
+            generate_id=self.service_id,
+        ):
+            async with self.micro_client.ping_iter() as replies:
+                pongs = [pong async for pong in replies]
+            assert pongs == [expected]
+            async with self.micro_client.service(
+                self.service_name()
+            ).ping_iter() as replies:
+                pongs = [pong async for pong in replies]
+            assert pongs == [expected]
+
+    async def test_info(self) -> None:
+        expected = micro.ServiceInfo(
+            id=self.service_id(),
+            name=self.service_name(),
+            version=self.service_version(),
+            description="",
+            endpoints=[],
+            metadata={},
+            type="io.nats.micro.v1.info_response",
+        )
+        async with micro.add_service(
+            self.nats_client,
+            self.service_name(),
+            self.service_version(),
+            generate_id=self.service_id,
+        ):
+            async with self.micro_client.info_iter() as replies:
+                infos = [info async for info in replies]
+            assert infos == [expected]
+            async with self.micro_client.service(
+                self.service_name()
+            ).info_iter() as replies:
+                infos = [info async for info in replies]
+            assert infos == [expected]
+
+    async def test_stats(self) -> None:
+        expected = micro.ServiceStats(
+            name=self.service_name(),
+            version=self.service_version(),
+            id=self.service_id(),
+            endpoints=[],
+            metadata={},
+            type="io.nats.micro.v1.stats_response",
+            started="1970-01-01T00:00:00",
+        )
+        async with micro.add_service(
+            self.nats_client,
+            self.service_name(),
+            self.service_version(),
+            generate_id=self.service_id,
+            now=self.now,
+        ):
+            async with self.micro_client.stats_iter() as replies:
+                stats = [stat async for stat in replies]
+            assert stats == [expected]
+            async with self.micro_client.service(
+                self.service_name()
+            ).stats_iter() as replies:
+                stats = [stat async for stat in replies]
+            assert stats == [expected]
 
 
 class TestMicroEndpoint(MicroTestSetup):

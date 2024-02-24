@@ -4,6 +4,7 @@ import json
 from typing import AsyncContextManager, AsyncIterator
 
 from nats.aio.client import Client as NATS
+from nats.aio.msg import Msg
 from nats_contrib.request_many import (
     RequestManyExecutor,
     RequestManyIterator,
@@ -12,16 +13,8 @@ from nats_contrib.request_many import (
 
 from . import internal
 from .api import API_PREFIX
+from .errors import ServiceError
 from .models import PingInfo, ServiceInfo, ServiceStats
-
-
-class ServiceError(Exception):
-    """Raised when a service error is received."""
-
-    def __init__(self, code: int, description: str) -> None:
-        super().__init__(f"Service error {code}: {description}")
-        self.code = code
-        self.description = description
 
 
 class Client:
@@ -42,8 +35,21 @@ class Client:
         data: bytes | None = None,
         headers: dict[str, str] | None = None,
         timeout: float = 1,
-    ) -> bytes:
-        """Send a request and get the response."""
+    ) -> Msg:
+        """Send a request and get the response.
+
+        This method should be prefered over using the NATS client directly
+        because it will handle the service errors properly.
+
+        Args:
+            subject: The subject to send the request to.
+            data: The request data.
+            headers: Additional request headers.
+            timeout: The maximum time to wait for a response.
+
+        Returns:
+
+        """
         response = await self.nc.request(
             subject, data or b"", headers=headers, timeout=timeout
         )
@@ -54,7 +60,7 @@ class Client:
                     int(error_code), response.headers.get("Nats-Service-Error", "")
                 )
 
-        return response.data
+        return response
 
     async def ping(
         self,
@@ -113,7 +119,7 @@ class Client:
         )
         return [ServiceStats.from_response(json.loads(res.data)) for res in responses]
 
-    def aping(
+    def ping_iter(
         self,
         service: str | None = None,
         max_wait: float | None = None,
@@ -136,7 +142,7 @@ class Client:
             lambda res: PingInfo.from_response(json.loads(res.data)),
         )
 
-    def ainfo(
+    def info_iter(
         self,
         service: str | None = None,
         max_wait: float | None = None,
@@ -159,7 +165,7 @@ class Client:
             lambda res: ServiceInfo.from_response(json.loads(res.data)),
         )
 
-    def astats(
+    def stats_iter(
         self,
         service: str | None = None,
         max_wait: float | None = None,
@@ -182,9 +188,13 @@ class Client:
             lambda res: ServiceStats.from_response(json.loads(res.data)),
         )
 
-    def service(self, service: str) -> Service:
+    def service(self, service: str) -> Client.Service:
         """Get a client for a single service."""
         return self.Service(self, service)
+
+    def instance(self, service: str, id: str) -> Client.Instance:
+        """Get a client for a single service instance."""
+        return Client.Instance(self, service, id)
 
     class Service:
         def __init__(self, client: Client, service: str) -> None:
@@ -224,32 +234,38 @@ class Client:
                 self.service, max_wait, max_count, max_interval
             )
 
-        def aping(
+        def ping_iter(
             self,
             max_wait: float | None = None,
             max_count: int | None = None,
             max_interval: float | None = None,
         ) -> AsyncContextManager[AsyncIterator[PingInfo]]:
             """Ping all the service instances."""
-            return self.client.aping(self.service, max_wait, max_count, max_interval)
+            return self.client.ping_iter(
+                self.service, max_wait, max_count, max_interval
+            )
 
-        def ainfo(
+        def info_iter(
             self,
             max_wait: float | None = None,
             max_count: int | None = None,
             max_interval: float | None = None,
         ) -> AsyncContextManager[AsyncIterator[ServiceInfo]]:
             """Get all service instance informations."""
-            return self.client.ainfo(self.service, max_wait, max_count, max_interval)
+            return self.client.info_iter(
+                self.service, max_wait, max_count, max_interval
+            )
 
-        def astats(
+        def stats_iter(
             self,
             max_wait: float | None = None,
             max_count: int | None = None,
             max_interval: float | None = None,
         ) -> AsyncContextManager[AsyncIterator[ServiceStats]]:
             """Get all service instance stats."""
-            return self.client.astats(self.service, max_wait, max_count, max_interval)
+            return self.client.stats_iter(
+                self.service, max_wait, max_count, max_interval
+            )
 
         def instance(self, id: str) -> Client.Instance:
             """Get a client for a single service instance."""

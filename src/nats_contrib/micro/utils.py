@@ -9,7 +9,15 @@ T = TypeVar("T")
 
 
 class Context:
-    """A class to manage async resources."""
+    """A class to manage async resources.
+
+    This class is useful in a main function to manage ensure
+    that all async resources are cleaned up properly when the
+    program is cancelled.
+
+    It also allows to listen to signals and cancel the program
+    when a signal is received easily.
+    """
 
     def __init__(self):
         self.exit_stack = contextlib.AsyncExitStack()
