@@ -241,14 +241,8 @@ As of now, the project is less than 1000 lines of code, with a cyclomatic comple
 This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.
 
 
-``` py linenums="1" hl_lines="145-147" title="examples/minimal.py"
-import asyncio
-import contextlib
-import signal
-
-from nats.aio.client import Client
-
-import micro
+``` py linenums="1" title="examples/with_setup.py"
+from nats_contrib import micro
 
 
 async def echo(req: micro.Request) -> None:
@@ -256,44 +250,36 @@ async def echo(req: micro.Request) -> None:
     await req.respond(req.data())
 
 
-async def main():
-    # Define an event to signal when to quit
-    quit_event = asyncio.Event()
-    # Attach signal handler to the event loop
-    loop = asyncio.get_event_loop()
-    for sig in (signal.Signals.SIGINT, signal.Signals.SIGTERM):
-        loop.add_signal_handler(sig, lambda *_: quit_event.set())
-    # Create an async exit stack
-    async with contextlib.AsyncExitStack() as stack:
-        # Create a NATS client
-        nc = Client()
-        # Connect to NATS
-        await nc.connect("nats://localhost:4222")
-        # Push the client.close() method into the stack to be called on exit
-        stack.push_async_callback(nc.close)
-        # Push a new micro service into the stack to be stopped on exit
-        # The service will be stopped and drain its subscriptions before
-        # closing the connection.
-        service = await stack.enter_async_context(
-            micro.add_service(
-                nc,
-                name="demo-service",
-                version="1.0.0",
-                description="Demo service",
-            )
-        )
-        group = service.add_group("demo")
-        # Add an endpoint to the service
-        await group.add_endpoint(
-            name="echo",
-            handler=echo,
-        )
-        # Wait for the quit event
-        await quit_event.wait()
+async def setup(ctx: micro.sdk.Context) -> None:
+    """Configure the service.
+
+    This function is executed after the NATS connection is established.
+    """
+    # Connect to NATS and close it when the context is closed
+    # micro.add_service returns an AsyncContextManager that will
+    # start the service when entered and stop it when exited.
+    service = await ctx.add_service(
+        name="demo-service",
+        version="1.0.0",
+        description="Demo service",
+    )
+    # A group is a collection of endpoints with
+    # the same subject prefix.
+    group = service.add_group("demo")
+    # Add an endpoint to the service
+    await group.add_endpoint(
+        name="echo",
+        subject="ECHO",
+        handler=echo,
+    )
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    micro.sdk.run(
+        servers=["nats://localhost:4222"],
+        setup=setup,
+        trap_signals=True,
+    )
 ```
 
 After you've cloned the repo, you can run the example above with
@@ -301,17 +287,17 @@ After you've cloned the repo, you can run the example above with
 <!-- termynal -->
 
 ```bash
-$ python examples/minimal.py
+$ python examples/with_setup.py
 ```
 
-Once the service is running, you can use the `nats` CLI tool to send a request to the `demo.echo` subject:
+Once the service is running, you can use the `nats` CLI tool to send a request to the `demo.ECHO` subject:
 
 <!-- termynal -->
 
 ```bash
-$ nats req demo.echo "Hello, world!"
+$ nats req demo.ECHO "Hello, world!"
 
-21:14:34 Sending request on "demo.echo"
+21:14:34 Sending request on "demo.ECHO"
 21:14:34 Received with rtt 5.1048ms
 Hello, World!
 ```
@@ -351,7 +337,7 @@ Service Information
 Endpoints:
 
             Name: echo
-            Subject: demo.echo
+            Subject: demo.ECHO
         Queue Group: q
 
 Statistics for 1 Endpoint(s):
