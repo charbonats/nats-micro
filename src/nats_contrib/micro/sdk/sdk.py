@@ -15,7 +15,7 @@ T = TypeVar("T")
 
 
 class Context:
-    """A class to manage async resources.
+    """A class to run micro services easily.
 
     This class is useful in a main function to manage ensure
     that all async resources are cleaned up properly when the
@@ -103,6 +103,65 @@ class Context:
     async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
         await self.exit_stack.__aexit__(None, None, None)
 
+    async def run_forever(
+        self,
+        connect: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
+        setup: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
+        services: Iterable[object] | None = None,
+        trap_signals: bool | tuple[signal.Signals, ...] = False,
+        **connect_opts: Any,
+    ) -> None:
+        """Useful in a main function of a program.
+
+        This method will first connect to the NATS server, either
+        using the connect function or the connect_opts. Then it will
+        run the setup function and finally enter any additional services
+        provided.
+
+        If trap_signals is True, it will trap SIGINT and SIGTERM signals
+        and cancel the context when one of these signals is received.
+
+        Other signals can be trapped by providing a tuple of signals to
+        trap.
+
+        This method will not raise an exception if the context is cancelled.
+
+        You can use .cancelled() on the context to check if the coroutine was
+        cancelled.
+
+        Warning:
+            The context must not have been used as an async context manager
+            before calling this method.
+
+        Args:
+            connect: A coroutine to connect to the NATS server.
+            setup: A coroutine to setup the program.
+            services: A list of services to enter.
+            trap_signals: If True, trap SIGINT and SIGTERM signals.
+            connect_opts: The options to pass to the connect method.
+        """
+        async with self as ctx:
+            if trap_signals:
+                if trap_signals is True:
+                    trap_signals = (signal.Signals.SIGINT, signal.Signals.SIGTERM)
+                ctx.trap_signal(*trap_signals)
+            if connect is None:
+                await ctx.wait_for(ctx.client.connect(**connect_opts))
+            else:
+                await ctx.wait_for(connect(ctx))
+            if ctx.cancelled():
+                return
+            if setup:
+                await ctx.wait_for(setup(ctx))
+                if ctx.cancelled():
+                    return
+            if services:
+                for service in services:
+                    await ctx.enter(mount(ctx.client, service))
+                    if ctx.cancelled():
+                        return
+            await ctx.wait()
+
 
 async def _run_until_first_complete(
     *coros: Coroutine[Any, Any, Any],
@@ -134,28 +193,12 @@ def run(
 ) -> None:
     """Helper function to run an async program."""
 
-    async def main() -> None:
-        trap = trap_signals
-        async with Context() as ctx:
-            if trap:
-                if trap is True:
-                    trap = (signal.Signals.SIGINT, signal.Signals.SIGTERM)
-                ctx.trap_signal(*trap)
-            if connect is None:
-                await _run_until_first_complete(
-                    ctx.wait(), ctx.client.connect(**connect_opts)
-                )
-            else:
-                await _run_until_first_complete(ctx.wait(), connect(ctx))
-            if ctx.cancelled():
-                return
-            if setup:
-                await ctx.wait_for(setup(ctx))
-                if ctx.cancelled():
-                    return
-            if services:
-                for service in services:
-                    await ctx.enter(mount(ctx.client, service))
-            await ctx.wait()
-
-    asyncio.run(main())
+    asyncio.run(
+        Context().run_forever(
+            connect,
+            setup,
+            services,
+            trap_signals,
+            **connect_opts,
+        )
+    )
