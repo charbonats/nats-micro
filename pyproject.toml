@@ -22,7 +22,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dynamic = ["version"]
-dependencies = ["nats-py", "nats-request-many", "typing-extensions"]
+dependencies = ["nats-py", "nats-request-many>0.0.1", "typing-extensions"]
 
 [project.optional-dependencies]
 build = ["pip-tools", "build", "wheel"]

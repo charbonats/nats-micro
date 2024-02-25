@@ -376,12 +376,12 @@ class TestMicroClientIterators(MicroTestSetup):
             self.service_version(),
             generate_id=self.service_id,
         ):
-            async with self.micro_client.ping_iter() as replies:
+            async with self.micro_client.ping_iter(max_count=1) as replies:
                 pongs = [pong async for pong in replies]
             assert pongs == [expected]
-            async with self.micro_client.service(
-                self.service_name()
-            ).ping_iter() as replies:
+            async with self.micro_client.service(self.service_name()).ping_iter(
+                max_count=1
+            ) as replies:
                 pongs = [pong async for pong in replies]
             assert pongs == [expected]
 
@@ -401,12 +401,12 @@ class TestMicroClientIterators(MicroTestSetup):
             self.service_version(),
             generate_id=self.service_id,
         ):
-            async with self.micro_client.info_iter() as replies:
+            async with self.micro_client.info_iter(max_count=1) as replies:
                 infos = [info async for info in replies]
             assert infos == [expected]
-            async with self.micro_client.service(
-                self.service_name()
-            ).info_iter() as replies:
+            async with self.micro_client.service(self.service_name()).info_iter(
+                max_count=1
+            ) as replies:
                 infos = [info async for info in replies]
             assert infos == [expected]
 
@@ -427,12 +427,12 @@ class TestMicroClientIterators(MicroTestSetup):
             generate_id=self.service_id,
             now=self.now,
         ):
-            async with self.micro_client.stats_iter() as replies:
+            async with self.micro_client.stats_iter(max_count=1) as replies:
                 stats = [stat async for stat in replies]
             assert stats == [expected]
-            async with self.micro_client.service(
-                self.service_name()
-            ).stats_iter() as replies:
+            async with self.micro_client.service(self.service_name()).stats_iter(
+                max_count=1
+            ) as replies:
                 stats = [stat async for stat in replies]
             assert stats == [expected]
 
