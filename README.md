@@ -4,4 +4,4 @@ Browse code [here](./src/micro/api.py).
 
 Example usage [here](./examples/minimal.py).
 
-More info [here](https://charbonnierg.github.io/nats-micro/).
+More info [here](https://charbonats.github.io/nats-micro/).
