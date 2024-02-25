@@ -7,11 +7,9 @@ import logging
 import signal
 from typing import Any
 
-from nats.aio.client import Client
 from uvicorn import Config
 
 from nats_contrib import micro
-from nats_contrib.micro.utils import Context, run_until_first_complete
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,8 +26,8 @@ async def echo_handler(req: micro.Request) -> None:
     await req.respond(req.data())
 
 
-async def setup_service(
-    ctx: Context,
+async def connect_and_setup(
+    ctx: micro.sdk.Context,
     url: str,
     max_reconnect: int,
 ) -> None:
@@ -41,12 +39,9 @@ async def setup_service(
         max_reconnect: The maximum number of reconnection attempts.
     """
 
-    # Create a new nats client
-    nc = Client()
-
     # Create a new micro service
     service = micro.add_service(
-        nc,
+        ctx.client,
         name="demo-service",
         version="1.0.0",
         description="Demo service",
@@ -54,8 +49,8 @@ async def setup_service(
 
     # Define a closed_cb callback for nats
     async def on_close() -> None:
-        if nc.last_error:
-            logger.error("connection to nats server closed: %s", nc.last_error)
+        if ctx.client.last_error:
+            logger.error("connection to nats server closed: %s", ctx.client.last_error)
         else:
             logger.info("connection to nats server closed")
         # Cancel the context
@@ -68,31 +63,31 @@ async def setup_service(
 
     # Connect to the nats server
     logger.info("connecting to %s", url)
-    await nc.connect(
+    await ctx.connect(
         url,
         closed_cb=on_close,
         reconnected_cb=on_reconnected,
         max_reconnect_attempts=max_reconnect,
     )
 
-    # Push the client.close() method into the stack to be called on exit
-    await ctx.enter_context(nc)
-
     # Ensure that the service is closed on exit
-    await ctx.enter_context(service)
+    await ctx.enter(service)
 
     # Add a group to the service
     group = service.add_group("demo")
     # Add an endpoint to the group
     ep = await group.add_endpoint(
         name="echo",
+        subject="ECHO",
         handler=echo_handler,
     )
+    # Start the HTTP server
+    await setup_http_server(ctx)
     # Indicate that the service is ready to accept requests
     logger.info("service %s listenning on '%s'", service.info().name, ep.info.subject)
 
 
-async def setup_http_server(ctx: Context) -> None:
+async def setup_http_server(ctx: micro.sdk.Context) -> None:
     # FastAPI Uvicorn override
     import uvicorn
     from starlette.applications import Starlette
@@ -131,7 +126,7 @@ async def setup_http_server(ctx: Context) -> None:
     # Create a new server
     server = Server(config=uvicorn.Config(app=app, loop="asyncio"))
     # Run the server
-    await ctx.enter_context(server)
+    await ctx.enter(server)
 
 
 async def main(
@@ -140,16 +135,11 @@ async def main(
 ):
     """Run the main event loop."""
     # Create a new context
-    async with Context() as ctx:
+    async with micro.sdk.Context() as ctx:
         # Trap the SIGINT and SIGTERM signals
         ctx.trap_signal(signal.Signals.SIGINT, signal.Signals.SIGTERM)
         # Setup the service
-        await run_until_first_complete(
-            setup_service(ctx, url, max_reconnect),
-            ctx.wait(),
-        )
-        # Setup the http server
-        await setup_http_server(ctx)
+        await ctx.wait_for(connect_and_setup(ctx, url, max_reconnect))
         # Wait for the context to be cancelled
         await ctx.wait()
 

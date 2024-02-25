@@ -2,7 +2,7 @@ import pytest
 
 from nats_contrib.micro.testing import make_request
 
-from .minimal import echo
+from .with_setup import echo
 
 
 @pytest.mark.asyncio

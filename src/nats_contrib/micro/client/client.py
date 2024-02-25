@@ -11,10 +11,10 @@ from nats_contrib.request_many import (
     transform,
 )
 
-from . import internal
-from .api import API_PREFIX
+from .. import internal
+from ..api import API_PREFIX
+from ..models import PingInfo, ServiceInfo, ServiceStats
 from .errors import ServiceError
-from .models import PingInfo, ServiceInfo, ServiceStats
 
 
 class Client:
@@ -188,127 +188,117 @@ class Client:
             lambda res: ServiceStats.from_response(json.loads(res.data)),
         )
 
-    def service(self, service: str) -> Client.Service:
+    def service(self, service: str) -> Service:
         """Get a client for a single service."""
-        return self.Service(self, service)
+        return Service(self, service)
 
-    def instance(self, service: str, id: str) -> Client.Instance:
+    def instance(self, service: str, id: str) -> Instance:
         """Get a client for a single service instance."""
-        return Client.Instance(self, service, id)
+        return Instance(self, service, id)
 
-    class Service:
-        def __init__(self, client: Client, service: str) -> None:
-            self.client = client
-            self.service = service
 
-        async def ping(
-            self,
-            max_wait: float | None = None,
-            max_count: int | None = None,
-            max_interval: float | None = None,
-        ) -> list[PingInfo]:
-            """Ping all the service instances."""
-            return await self.client.ping(
-                self.service, max_wait, max_count, max_interval
-            )
+class Service:
+    def __init__(self, client: Client, service: str) -> None:
+        self.client = client
+        self.service = service
 
-        async def info(
-            self,
-            max_wait: float | None = None,
-            max_count: int | None = None,
-            max_interval: float | None = None,
-        ) -> list[ServiceInfo]:
-            """Get all service instance informations."""
-            return await self.client.info(
-                self.service, max_wait, max_count, max_interval
-            )
+    async def ping(
+        self,
+        max_wait: float | None = None,
+        max_count: int | None = None,
+        max_interval: float | None = None,
+    ) -> list[PingInfo]:
+        """Ping all the service instances."""
+        return await self.client.ping(self.service, max_wait, max_count, max_interval)
 
-        async def stats(
-            self,
-            max_wait: float | None = None,
-            max_count: int | None = None,
-            max_interval: float | None = None,
-        ) -> list[ServiceStats]:
-            """Get all service instance stats."""
-            return await self.client.stats(
-                self.service, max_wait, max_count, max_interval
-            )
+    async def info(
+        self,
+        max_wait: float | None = None,
+        max_count: int | None = None,
+        max_interval: float | None = None,
+    ) -> list[ServiceInfo]:
+        """Get all service instance informations."""
+        return await self.client.info(self.service, max_wait, max_count, max_interval)
 
-        def ping_iter(
-            self,
-            max_wait: float | None = None,
-            max_count: int | None = None,
-            max_interval: float | None = None,
-        ) -> AsyncContextManager[AsyncIterator[PingInfo]]:
-            """Ping all the service instances."""
-            return self.client.ping_iter(
-                self.service, max_wait, max_count, max_interval
-            )
+    async def stats(
+        self,
+        max_wait: float | None = None,
+        max_count: int | None = None,
+        max_interval: float | None = None,
+    ) -> list[ServiceStats]:
+        """Get all service instance stats."""
+        return await self.client.stats(self.service, max_wait, max_count, max_interval)
 
-        def info_iter(
-            self,
-            max_wait: float | None = None,
-            max_count: int | None = None,
-            max_interval: float | None = None,
-        ) -> AsyncContextManager[AsyncIterator[ServiceInfo]]:
-            """Get all service instance informations."""
-            return self.client.info_iter(
-                self.service, max_wait, max_count, max_interval
-            )
+    def ping_iter(
+        self,
+        max_wait: float | None = None,
+        max_count: int | None = None,
+        max_interval: float | None = None,
+    ) -> AsyncContextManager[AsyncIterator[PingInfo]]:
+        """Ping all the service instances."""
+        return self.client.ping_iter(self.service, max_wait, max_count, max_interval)
 
-        def stats_iter(
-            self,
-            max_wait: float | None = None,
-            max_count: int | None = None,
-            max_interval: float | None = None,
-        ) -> AsyncContextManager[AsyncIterator[ServiceStats]]:
-            """Get all service instance stats."""
-            return self.client.stats_iter(
-                self.service, max_wait, max_count, max_interval
-            )
+    def info_iter(
+        self,
+        max_wait: float | None = None,
+        max_count: int | None = None,
+        max_interval: float | None = None,
+    ) -> AsyncContextManager[AsyncIterator[ServiceInfo]]:
+        """Get all service instance informations."""
+        return self.client.info_iter(self.service, max_wait, max_count, max_interval)
 
-        def instance(self, id: str) -> Client.Instance:
-            """Get a client for a single service instance."""
-            return Client.Instance(self.client, self.service, id)
+    def stats_iter(
+        self,
+        max_wait: float | None = None,
+        max_count: int | None = None,
+        max_interval: float | None = None,
+    ) -> AsyncContextManager[AsyncIterator[ServiceStats]]:
+        """Get all service instance stats."""
+        return self.client.stats_iter(self.service, max_wait, max_count, max_interval)
 
-    class Instance:
-        def __init__(self, client: Client, service: str, id: str) -> None:
-            self.client = client
-            self.service = service
-            self.id = id
+    def instance(self, id: str) -> Instance:
+        """Get a client for a single service instance."""
+        return Instance(self.client, self.service, id)
 
-        async def ping(
-            self,
-            timeout: float = 0.5,
-        ) -> PingInfo:
-            """Ping a service instance."""
-            subject = internal.get_internal_subject(
-                internal.ServiceVerb.PING, self.service, self.id, self.client.api_prefix
-            )
-            response = await self.client.nc.request(subject, b"", timeout=timeout)
-            return PingInfo.from_response(json.loads(response.data))
 
-        async def info(
-            self,
-            timeout: float = 0.5,
-        ) -> ServiceInfo:
-            """Get the service instance information."""
-            subject = internal.get_internal_subject(
-                internal.ServiceVerb.INFO, self.service, self.id, self.client.api_prefix
-            )
-            response = await self.client.nc.request(subject, b"", timeout=timeout)
-            return ServiceInfo.from_response(json.loads(response.data))
+class Instance:
+    def __init__(self, client: Client, service: str, id: str) -> None:
+        self.client = client
+        self.service = service
+        self.id = id
 
-        async def stats(
-            self,
-            timeout: float = 0.5,
-        ) -> ServiceStats:
-            """Get the service instance stats."""
-            subject = internal.get_internal_subject(
-                internal.ServiceVerb.STATS,
-                self.service,
-                self.id,
-                self.client.api_prefix,
-            )
-            response = await self.client.nc.request(subject, b"", timeout=timeout)
-            return ServiceStats.from_response(json.loads(response.data))
+    async def ping(
+        self,
+        timeout: float = 0.5,
+    ) -> PingInfo:
+        """Ping a service instance."""
+        subject = internal.get_internal_subject(
+            internal.ServiceVerb.PING, self.service, self.id, self.client.api_prefix
+        )
+        response = await self.client.nc.request(subject, b"", timeout=timeout)
+        return PingInfo.from_response(json.loads(response.data))
+
+    async def info(
+        self,
+        timeout: float = 0.5,
+    ) -> ServiceInfo:
+        """Get the service instance information."""
+        subject = internal.get_internal_subject(
+            internal.ServiceVerb.INFO, self.service, self.id, self.client.api_prefix
+        )
+        response = await self.client.nc.request(subject, b"", timeout=timeout)
+        return ServiceInfo.from_response(json.loads(response.data))
+
+    async def stats(
+        self,
+        timeout: float = 0.5,
+    ) -> ServiceStats:
+        """Get the service instance stats."""
+        subject = internal.get_internal_subject(
+            internal.ServiceVerb.STATS,
+            self.service,
+            self.id,
+            self.client.api_prefix,
+        )
+        response = await self.client.nc.request(subject, b"", timeout=timeout)
+        return ServiceStats.from_response(json.loads(response.data))

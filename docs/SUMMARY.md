@@ -1,4 +1,6 @@
 * [Home](index.md)
-* [Reference](./reference/nats_contrib/micro/index.md)
+* [API Reference](./reference/nats_contrib/micro/index.md)
+* [Client Reference](./reference/nats_contrib/micro/client/index.md)
+* [SDK Reference](./reference/nats_contrib/micro/sdk/index.md)
 * [Coverage](./coverage/index.html)
 * [License](./LICENSE.md)

@@ -10,6 +10,7 @@ from nats.aio.client import Client as NATS
 from nats_contrib.test_server import NATSD
 
 from nats_contrib import micro
+from nats_contrib.micro import client as micro_client
 from nats_contrib.micro import testing
 
 UNIX_START_TIME = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
@@ -21,7 +22,7 @@ class MicroTestSetup:
     async def setup(self, nats_server: NATSD, nats_client: NATS) -> AsyncIterator[None]:
         self.nats_server = nats_server
         self.nats_client = nats_client
-        self.micro_client = micro.Client(nats_client)
+        self.micro_client = micro_client.Client(nats_client)
         self.test_stack = contextlib.AsyncExitStack()
         self.exception_to_raise = ValueError("error")
         async with self.test_stack:
@@ -185,7 +186,7 @@ class TestMicroRequest(MicroTestSetup):
             generate_id=self.service_id,
         ) as service:
             await service.add_endpoint("the-subject", self.handler_with_error)
-            with pytest.raises(micro.ServiceError) as exc_info:
+            with pytest.raises(micro_client.ServiceError) as exc_info:
                 reply = await self.micro_client.request(
                     "the-subject", b"the-payload", headers={"the": "header"}
                 )
@@ -651,7 +652,7 @@ class TestMicroEndpoint(MicroTestSetup):
                 "endpoint1",
                 self.handler_with_error,
             )
-            with pytest.raises(micro.ServiceError) as exc_info:
+            with pytest.raises(micro_client.ServiceError) as exc_info:
                 await self.micro_client.request("endpoint1", b"")
             assert exc_info.value.code == 500
             assert exc_info.value.description == "Internal Server Error"
@@ -668,7 +669,7 @@ class TestMicroEndpoint(MicroTestSetup):
                 "endpoint1",
                 self.handler_with_error,
             )
-            with pytest.raises(micro.ServiceError):
+            with pytest.raises(micro_client.ServiceError):
                 await self.micro_client.request("endpoint1", b"")
             result = (
                 await self.micro_client.service(self.service_name())

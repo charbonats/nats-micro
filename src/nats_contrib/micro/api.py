@@ -44,6 +44,8 @@ def add_service(
     description: str | None = None,
     metadata: dict[str, str] | None = None,
     queue_group: str | None = None,
+    pending_bytes_limit_by_endpoint: int | None = None,
+    pending_msgs_limit_by_endpoint: int | None = None,
     now: Callable[[], datetime] | None = None,
     generate_id: Callable[[], str] | None = None,
     api_prefix: str | None = None,
@@ -65,6 +67,8 @@ def add_service(
         description: The description of the service.
         metadata: The metadata of the service.
         queue_group: The default queue group of the service.
+        pending_bytes_limit_by_endpoint: The default pending bytes limit for each endpoint within the service.
+        pending_msgs_limit_by_endpoint: The default pending messages limit for each endpoint within the service.
         now: The function to get the current time.
         generate_id: The function to generate a unique service instance id.
         api_prefix: The prefix of the control subjects.
@@ -78,8 +82,10 @@ def add_service(
         description=description or "",
         metadata=metadata or {},
         queue_group=queue_group or DEFAULT_QUEUE_GROUP,
-        pending_bytes_limit_by_endpoint=DEFAULT_SUB_PENDING_BYTES_LIMIT,
-        pending_msgs_limit_by_endpoint=DEFAULT_SUB_PENDING_MSGS_LIMIT,
+        pending_bytes_limit_by_endpoint=pending_bytes_limit_by_endpoint
+        or DEFAULT_SUB_PENDING_BYTES_LIMIT,
+        pending_msgs_limit_by_endpoint=pending_msgs_limit_by_endpoint
+        or DEFAULT_SUB_PENDING_MSGS_LIMIT,
     )
     return Service(
         nc=nc,
@@ -103,12 +109,6 @@ class Endpoint:
         """Reset the endpoint statistics."""
         self.stats = internal.create_endpoint_stats(self.config)
         self.info = internal.create_endpoint_info(self.config)
-
-    async def stop(self) -> None:
-        """Stop the endpoint by draining its subscription."""
-        if self._sub:
-            await unsubscribe(self._sub)
-            self._sub = None
 
 
 class Group:
@@ -278,11 +278,11 @@ class Service:
         """
         self._stopped = True
         # Stop all endpoints
-        await asyncio.gather(*(ep.stop() for ep in self._endpoints))
+        await asyncio.gather(*(_stop_endpoint(ep) for ep in self._endpoints))
         # Stop all internal subscriptions
         await asyncio.gather(
             *(
-                unsubscribe(sub)
+                _unsubscribe(sub)
                 for subscriptions in (
                     self._stats_subscriptions,
                     self._info_subscriptions,
@@ -454,7 +454,14 @@ def _create_handler(endpoint: Endpoint) -> Callable[[Msg], Awaitable[None]]:
     return handler
 
 
-async def unsubscribe(sub: Subscription) -> None:
+async def _stop_endpoint(endpoint: Endpoint) -> None:
+    """Stop the endpoint by draining its subscription."""
+    if endpoint._sub:  # pyright: ignore[reportPrivateUsage]
+        await _unsubscribe(endpoint._sub)  # pyright: ignore[reportPrivateUsage]
+        endpoint._sub = None  # pyright: ignore[reportPrivateUsage]
+
+
+async def _unsubscribe(sub: Subscription) -> None:
     try:
         await sub.unsubscribe()
     except BadSubscriptionError:
