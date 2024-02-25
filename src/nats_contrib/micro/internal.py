@@ -11,7 +11,7 @@ A typescript implementation is available in [nats.deno](https://github.com/nats-
 from __future__ import annotations
 
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from json import dumps
@@ -229,15 +229,15 @@ def new_ping_info(id: str, config: ServiceConfig) -> PingInfo:
 
 
 def encode_ping_info(info: PingInfo) -> bytes:
-    return dumps(asdict(info), separators=(",", ":")).encode()
+    return dumps(info.as_dict(), separators=(",", ":")).encode()
 
 
 def encode_stats(stats: ServiceStats) -> bytes:
-    return dumps(asdict(stats), separators=(",", ":")).encode()
+    return dumps(stats.as_dict(), separators=(",", ":")).encode()
 
 
 def encode_info(info: ServiceInfo) -> bytes:
-    return dumps(asdict(info), separators=(",", ":")).encode()
+    return dumps(info.as_dict(), separators=(",", ":")).encode()
 
 
 def default_clock() -> datetime:

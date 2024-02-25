@@ -111,6 +111,47 @@ class TestRequestStub:
             **(headers if headers else {}),
         }
 
+    async def test_init_validates_subject_parameter(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+            testing.make_request(123, b"the-payload", {"the": "header"})  # type: ignore
+        assert str(exc_info.value) == "subject must be a string, not int"
+
+    async def test_init_validates_data_parameter(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+            testing.make_request("the-subject", "the-payload", {"the": "header"})  # type: ignore
+        assert str(exc_info.value) == "data must be bytes, not str"
+
+    async def test_init_validates_headers_parameter(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+            testing.make_request("the-subject", b"the-payload", "the-header")  # type: ignore
+        assert str(exc_info.value) == "headers must be a dict, not str"
+
+    async def test_respond_validates_payload(self) -> None:
+        request = testing.make_request("the-subject", b"the-paylaod", {"the": "header"})
+        with pytest.raises(TypeError) as exc_info:
+            await request.respond("the-response")  # type: ignore
+        assert str(exc_info.value) == "data must be bytes, not str"
+
+    async def test_respond_validates_headers(self) -> None:
+        request = testing.make_request("the-subject", b"the-paylaod", {"the": "header"})
+        with pytest.raises(TypeError) as exc_info:
+            await request.respond(b"the-response", "the-response-header")  # type: ignore
+        assert str(exc_info.value) == "headers must be a dict, not str"
+
+    async def test_response_data_getter_raises_error_when_not_responded(self) -> None:
+        request = testing.make_request("the-subject", b"the-paylaod", {"the": "header"})
+        with pytest.raises(testing.NoResponseError) as exc_info:
+            request.response_data()
+        assert str(exc_info.value) == "No response has been set"
+
+    async def test_response_headers_getter_raises_error_when_not_responded(
+        self,
+    ) -> None:
+        request = testing.make_request("the-subject", b"the-paylaod", {"the": "header"})
+        with pytest.raises(testing.NoResponseError) as exc_info:
+            request.response_headers()
+        assert str(exc_info.value) == "No response has been set"
+
 
 class TestMicroRequest(MicroTestSetup):
     async def test_nats_request(self) -> None:
@@ -133,6 +174,48 @@ class TestMicroRequest(MicroTestSetup):
             )
             assert result.data == b"the-response"
             assert result.headers == {"the": "response-header"}
+
+    async def test_nats_request_with_error(self) -> None:
+        async with micro.add_service(
+            self.nats_client,
+            self.service_name(),
+            self.service_version(),
+            generate_id=self.service_id,
+        ) as service:
+            await service.add_endpoint("the-subject", self.handler_with_error)
+            with pytest.raises(micro.ServiceError) as exc_info:
+                reply = await self.micro_client.request(
+                    "the-subject", b"the-payload", headers={"the": "header"}
+                )
+                # Should never happen but helps debuggging
+                assert not reply
+            assert exc_info.value.code == 500
+            assert exc_info.value.description == "Internal Server Error"
+
+    async def test_nats_ignore_no_reply(self) -> None:
+        async with micro.add_service(
+            self.nats_client,
+            self.service_name(),
+            self.service_version(),
+            generate_id=self.service_id,
+        ) as service:
+            await service.add_endpoint("the-subject", self.handler)
+            await self.nats_client.publish(
+                "the-subject",
+                b"the-payload",
+                headers={"the": "header"},
+            )
+            # Make sure request was processed and no error occured using stats
+            result = (
+                await self.micro_client.service(self.service_name())
+                .instance(self.service_id())
+                .stats()
+            )
+            assert len(result.endpoints) == 1
+            assert result.endpoints[0].num_requests == 1
+            assert result.endpoints[0].num_errors == 0
+            assert result.endpoints[0].processing_time > 0
+            assert result.endpoints[0].average_processing_time > 0
 
 
 class TestMicro(MicroTestSetup):
@@ -827,3 +910,68 @@ class TestMicroGroupWithSubgroup(MicroTestSetup):
                 type="io.nats.micro.v1.stats_response",
                 started="1970-01-01T00:00:00",
             )
+
+
+class TestMicroModels:
+    def test_copy_pong_and_mutate(self) -> None:
+        pong = micro.models.PingInfo(
+            id="123",
+            name="service1",
+            version="0.0.1",
+            metadata={"the": "metadata"},
+            type="io.nats.micro.v1.ping_response",
+        )
+        pong2 = pong.copy()
+        assert pong2 == pong
+        pong2.id = "456"
+        assert pong2 != pong
+        pong2.metadata["the"] = "other"
+        assert pong2.metadata != pong.metadata
+
+    def test_copy_service_info_and_mutate(self) -> None:
+        info = micro.ServiceInfo(
+            id="123",
+            name="service1",
+            version="0.0.1",
+            description="",
+            endpoints=[],
+            metadata={"the": "metadata"},
+            type="io.nats.micro.v1.info_response",
+        )
+        info2 = info.copy()
+        assert info2 == info
+        info2.id = "456"
+        assert info2 != info
+        info2.metadata["the"] = "other"
+        assert info2.metadata != info.metadata
+        info2.endpoints.append(
+            micro.EndpointInfo(name="endpoint1", subject="endpoint1")
+        )
+        assert info2.endpoints != info.endpoints
+
+    def test_copy_service_stats_and_mutate(self) -> None:
+        stats = micro.ServiceStats(
+            name="service1",
+            version="0.0.1",
+            id="123",
+            endpoints=[],
+            metadata={"the": "metadata"},
+            type="io.nats.micro.v1.stats_response",
+            started="1970-01-01T00:00:00",
+        )
+        stats2 = stats.copy()
+        assert stats2 == stats
+        stats2.id = "456"
+        assert stats2 != stats
+        stats2.endpoints.append(
+            micro.EndpointStats(
+                name="endpoint1",
+                subject="endpoint1",
+                num_requests=0,
+                num_errors=0,
+                last_error="",
+                processing_time=0,
+                average_processing_time=0,
+            )
+        )
+        assert stats2.endpoints != stats.endpoints

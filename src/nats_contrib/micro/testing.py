@@ -92,11 +92,11 @@ class RequestStub(Request):
     def response_data(self) -> bytes:
         """Use this method durign tests to get the response data."""
         if self._response_data is None:
-            raise NoResponseError("Response data is not available")
+            raise NoResponseError("No response has been set")
         return self._response_data
 
     def response_headers(self) -> dict[str, str]:
         """Use this method during tests to get the response headers."""
         if self._response_headers is None:
-            raise NoResponseError("Response headers are not available")
+            raise NoResponseError("No response has been set")
         return self._response_headers
