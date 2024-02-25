@@ -12,6 +12,8 @@ from nats_contrib.test_server import NATSD
 from nats_contrib import micro
 from nats_contrib.micro import testing
 
+UNIX_START_TIME = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+
 
 @pytest.mark.asyncio
 class MicroTestSetup:
@@ -26,7 +28,7 @@ class MicroTestSetup:
             yield None
 
     def now(self) -> datetime.datetime:
-        return datetime.datetime(1970, 1, 1)
+        return UNIX_START_TIME
 
     def service_id(self) -> str:
         return "123456789"
@@ -300,7 +302,7 @@ class TestMicro(MicroTestSetup):
             endpoints=[],
             metadata={},
             type="io.nats.micro.v1.stats_response",
-            started="1970-01-01T00:00:00",
+            started=UNIX_START_TIME,
         )
         async with micro.add_service(
             self.nats_client,
@@ -374,7 +376,7 @@ class TestMicro(MicroTestSetup):
                 endpoints=[],
                 metadata={},
                 type="io.nats.micro.v1.stats_response",
-                started="1970-01-01T00:00:00",
+                started=UNIX_START_TIME,
             )
             assert result == service.stats()
 
@@ -396,7 +398,9 @@ class TestMicro(MicroTestSetup):
                 .stats()
             )
             assert result.endpoints[0].num_requests == 1
-            service._clock = lambda: datetime.datetime(1970, 1, 2)
+            service._clock = lambda: datetime.datetime(
+                1970, 1, 2, tzinfo=datetime.timezone.utc
+            )
             service.reset()
             result = (
                 await self.micro_client.service(self.service_name())
@@ -404,7 +408,9 @@ class TestMicro(MicroTestSetup):
                 .stats()
             )
             assert result.endpoints[0].num_requests == 0
-            assert result.started == "1970-01-02T00:00:00"
+            assert result.started == datetime.datetime(
+                1970, 1, 2, tzinfo=datetime.timezone.utc
+            )
 
     async def test_stopped_after_request(self) -> None:
         async with micro.add_service(
@@ -501,7 +507,7 @@ class TestMicroClientIterators(MicroTestSetup):
             endpoints=[],
             metadata={},
             type="io.nats.micro.v1.stats_response",
-            started="1970-01-01T00:00:00",
+            started=UNIX_START_TIME,
         )
         async with micro.add_service(
             self.nats_client,
@@ -592,7 +598,7 @@ class TestMicroEndpoint(MicroTestSetup):
                 ],
                 metadata={},
                 type="io.nats.micro.v1.stats_response",
-                started="1970-01-01T00:00:00",
+                started=UNIX_START_TIME,
             )
 
     async def test_handler(self) -> None:
@@ -750,7 +756,7 @@ class TestMicroEndpointWithSubject(MicroTestSetup):
                 ],
                 metadata={},
                 type="io.nats.micro.v1.stats_response",
-                started="1970-01-01T00:00:00",
+                started=UNIX_START_TIME,
             )
 
 
@@ -828,7 +834,7 @@ class TestMicroGroup(MicroTestSetup):
                 ],
                 metadata={},
                 type="io.nats.micro.v1.stats_response",
-                started="1970-01-01T00:00:00",
+                started=UNIX_START_TIME,
             )
 
 
@@ -908,7 +914,7 @@ class TestMicroGroupWithSubgroup(MicroTestSetup):
                 ],
                 metadata={},
                 type="io.nats.micro.v1.stats_response",
-                started="1970-01-01T00:00:00",
+                started=UNIX_START_TIME,
             )
 
 
@@ -957,7 +963,7 @@ class TestMicroModels:
             endpoints=[],
             metadata={"the": "metadata"},
             type="io.nats.micro.v1.stats_response",
-            started="1970-01-01T00:00:00",
+            started=UNIX_START_TIME,
         )
         stats2 = stats.copy()
         assert stats2 == stats

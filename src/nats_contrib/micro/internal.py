@@ -193,7 +193,7 @@ def new_service_stats(
         name=config.name,
         id=id,
         version=config.version,
-        started=started.isoformat(),
+        started=started,
         endpoints=[],
         metadata=config.metadata,
     )

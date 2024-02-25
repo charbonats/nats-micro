@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from dataclasses import dataclass, fields, replace
 from typing import Any, TypeVar
 
@@ -29,6 +30,33 @@ class Base:
                 continue
             result[field.name] = val
         return result
+
+    @staticmethod
+    def _convert_rfc3339(resp: dict[str, Any], field: str) -> None:
+        """Convert a RFC 3339 formatted string into a datetime.
+        If the string is None, None is returned.
+        """
+        val = resp.get(field, None)
+        if val is None:
+            return None
+        raw_date = val[:26]
+        if raw_date.endswith("Z"):
+            raw_date = raw_date[:-1] + "+00:00"
+        resp[field] = datetime.datetime.fromisoformat(raw_date).replace(
+            tzinfo=datetime.timezone.utc
+        )
+
+    @staticmethod
+    def _to_rfc3339(date: datetime.datetime) -> str:
+        """Convert a datetime into RFC 3339 formatted string.
+        If datetime does not have timezone information, datetime
+        is assumed to be in UTC timezone.
+        """
+        if date.tzinfo is None:
+            date = date.replace(tzinfo=datetime.timezone.utc)
+        elif date.tzinfo != datetime.timezone.utc:
+            date = date.astimezone(datetime.timezone.utc)
+        return date.isoformat().replace("+00:00", "Z").replace(".000000", "")
 
 
 @dataclass
@@ -94,7 +122,7 @@ class ServiceStats(Base):
     """
     The version of the service
     """
-    started: str
+    started: datetime.datetime
     """
     The time the service was stated in RFC3339 format
     """
@@ -118,6 +146,7 @@ class ServiceStats(Base):
         """Return the object converted into an API-friendly dict."""
         result = super().as_dict()
         result["endpoints"] = [ep.as_dict() for ep in self.endpoints]
+        result["started"] = self._to_rfc3339(self.started)
         return result
 
     @classmethod
@@ -126,6 +155,7 @@ class ServiceStats(Base):
 
         Unknown fields are ignored ("open-world assumption").
         """
+        cls._convert_rfc3339(resp, "started")
         stats = super().from_response(resp)
         stats.endpoints = [EndpointStats.from_response(ep) for ep in resp["endpoints"]]
         return stats
