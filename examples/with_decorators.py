@@ -30,6 +30,11 @@ class EchoService:
         )
 
 
+#
+# Alternatively, service(s) can be registered like this, to pass context or client into the service.
+#     services= lambda ctx: [EchoService(some_configuration="some value"),],
+#
+        
 if __name__ == "__main__":
     micro.sdk.run(
         servers=["nats://localhost:4222"],

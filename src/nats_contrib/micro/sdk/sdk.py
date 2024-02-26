@@ -4,7 +4,7 @@ import asyncio
 import contextlib
 import datetime
 import signal
-from typing import Any, AsyncContextManager, Callable, Coroutine, Iterable, TypeVar
+from typing import Any, AsyncContextManager, Callable, Coroutine, Iterable, TypeVar, Union
 
 from nats.aio.client import Client as NATS
 
@@ -107,7 +107,7 @@ class Context:
         self,
         connect: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
         setup: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
-        services: Iterable[object] | None = None,
+        services: Callable[[Context], object | Iterable[object]] | Iterable[object] | None = None,
         trap_signals: bool | tuple[signal.Signals, ...] = False,
         **connect_opts: Any,
     ) -> None:
@@ -136,7 +136,8 @@ class Context:
         Args:
             connect: A coroutine to connect to the NATS server.
             setup: A coroutine to setup the program.
-            services: A list of services to enter.
+            services: A list of services to enter or a lambda function as service factory with the context as argument.
+            If the lambda function is passed, it needs to return list of services.
             trap_signals: If True, trap SIGINT and SIGTERM signals.
             connect_opts: The options to pass to the connect method.
         """
@@ -156,12 +157,22 @@ class Context:
                 if ctx.cancelled():
                     return
             if services:
-                for service in services:
+                for service in self._resolve_services(ctx, services):
                     await ctx.enter(mount(ctx.client, service))
                     if ctx.cancelled():
                         return
             await ctx.wait()
 
+    def _resolve_services(self, ctx: Context, services: Callable[[Context], object|Iterable[object]] | Iterable[object] | None) -> Iterable[object]:
+        if services is None:
+            return []
+
+        svcs = services(ctx) if callable(services) else services
+
+        if not isinstance(svcs, Iterable):
+            svcs = [svcs]
+
+        return svcs # type: ignore
 
 async def _run_until_first_complete(
     *coros: Coroutine[Any, Any, Any],
@@ -187,7 +198,7 @@ async def _run_until_first_complete(
 def run(
     connect: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
     setup: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
-    services: Iterable[object] | None = None,
+    services: Callable[[Context], object | Iterable[object]] | Iterable[object] | None = None,
     trap_signals: bool | tuple[signal.Signals, ...] = False,
     **connect_opts: Any,
 ) -> None:
