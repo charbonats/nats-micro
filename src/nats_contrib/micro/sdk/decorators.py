@@ -131,7 +131,7 @@ def endpoint(
     return func
 
 
-def mount(
+def register_service(
     client: NATS,
     service: Any,
     prefix: str | None = None,
@@ -147,7 +147,6 @@ def mount(
             # Get service spec
             service_spec = get_service_spec(service)
             # Iterate over endpoints
-            print(f"Using service spec: {service_spec}\n")
             micro_service = add_service(
                 client,
                 service_spec.name,
@@ -171,7 +170,6 @@ def mount(
             for endpoint_handler, endpoint_spec in get_endpoints_specs(service):
                 if endpoint_spec.disabled:
                     continue
-                print(f"Using endpoint spec: {endpoint_spec}")
                 await parent.add_endpoint(
                     name=endpoint_spec.name,
                     handler=endpoint_handler,

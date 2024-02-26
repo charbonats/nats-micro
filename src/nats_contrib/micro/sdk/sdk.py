@@ -4,12 +4,13 @@ import asyncio
 import contextlib
 import datetime
 import signal
-from typing import Any, AsyncContextManager, Callable, Coroutine, Iterable, TypeVar
+from typing import Any, AsyncContextManager, Callable, Coroutine, TypeVar
 
 from nats.aio.client import Client as NATS
+from nats_contrib.connect_opts import ConnectOption, connect
 
 from ..api import Service, add_service
-from .decorators import mount
+from .decorators import register_service
 
 T = TypeVar("T")
 
@@ -25,14 +26,17 @@ class Context:
     when a signal is received easily.
     """
 
-    def __init__(self):
+    def __init__(self, client: NATS | None = None):
         self.exit_stack = contextlib.AsyncExitStack()
         self.cancel_event = asyncio.Event()
-        self.client = NATS()
+        self.client = client or NATS()
+        self.services: list[Service] = []
 
-    async def connect(self, *args: Any, **kwargs: Any) -> None:
+    async def connect(self, *options: ConnectOption) -> None:
         """Connect to the NATS server. Does not raise an error when cancelled"""
-        await self.wait_for(self.client.connect(*args, **kwargs))
+        await self.wait_for(connect(client=self.client, *options))
+        if not self.cancelled():
+            await self.enter(self.client)
 
     async def add_service(
         self,
@@ -62,7 +66,34 @@ class Context:
             api_prefix,
         )
         await self.enter(service)
+        self.services.append(service)
         return service
+
+    async def register_service(
+        self,
+        service: Any,
+        prefix: str | None = None,
+        now: Callable[[], datetime.datetime] | None = None,
+        generate_id: Callable[[], str] | None = None,
+        api_prefix: str | None = None,
+    ) -> Service:
+        """Mount a service to the context."""
+        service = register_service(
+            self.client,
+            service,
+            prefix,
+            now,
+            generate_id,
+            api_prefix,
+        )
+        await self.enter(service)
+        self.services.append(service)
+        return service
+
+    def reset(self) -> None:
+        """Reset all the services."""
+        for service in self.services:
+            service.reset()
 
     def cancel(self) -> None:
         """Set the cancel event."""
@@ -74,6 +105,8 @@ class Context:
 
     def trap_signal(self, *signals: signal.Signals) -> None:
         """Notify the context that a signal has been received."""
+        if not signals:
+            signals = (signal.Signals.SIGINT, signal.Signals.SIGTERM)
         loop = asyncio.get_event_loop()
         for sig in signals:
             loop.add_signal_handler(sig, self.cancel)
@@ -86,7 +119,7 @@ class Context:
         """Wait for the cancel event to be set."""
         await self.cancel_event.wait()
 
-    async def wait_for(self, coro: Coroutine[Any, Any, None]) -> None:
+    async def wait_for(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Run a coroutine in the context and cancel it context is cancelled.
 
         This method does not raise an exception if the coroutine is cancelled.
@@ -97,26 +130,25 @@ class Context:
 
     async def __aenter__(self) -> "Context":
         await self.exit_stack.__aenter__()
-        await self.exit_stack.enter_async_context(self.client)
         return self
 
     async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
-        await self.exit_stack.__aexit__(None, None, None)
+        try:
+            await self.exit_stack.__aexit__(None, None, None)
+        finally:
+            self.services.clear()
 
     async def run_forever(
         self,
-        connect: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
-        setup: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
-        services: Iterable[object] | None = None,
+        setup: Callable[[Context], Coroutine[Any, Any, None]],
+        *options: ConnectOption,
         trap_signals: bool | tuple[signal.Signals, ...] = False,
-        **connect_opts: Any,
     ) -> None:
         """Useful in a main function of a program.
 
-        This method will first connect to the NATS server, either
-        using the connect function or the connect_opts. Then it will
-        run the setup function and finally enter any additional services
-        provided.
+        This method will first connect to the NATS server using the provided
+        options. It will then run the setup function and finally enter any
+        additional services provided.
 
         If trap_signals is True, it will trap SIGINT and SIGTERM signals
         and cancel the context when one of these signals is received.
@@ -134,7 +166,6 @@ class Context:
             before calling this method.
 
         Args:
-            connect: A coroutine to connect to the NATS server.
             setup: A coroutine to setup the program.
             services: A list of services to enter.
             trap_signals: If True, trap SIGINT and SIGTERM signals.
@@ -145,21 +176,12 @@ class Context:
                 if trap_signals is True:
                     trap_signals = (signal.Signals.SIGINT, signal.Signals.SIGTERM)
                 ctx.trap_signal(*trap_signals)
-            if connect is None:
-                await ctx.wait_for(ctx.client.connect(**connect_opts))
-            else:
-                await ctx.wait_for(connect(ctx))
+            await ctx.wait_for(connect(client=ctx.client, *options))
             if ctx.cancelled():
                 return
-            if setup:
-                await ctx.wait_for(setup(ctx))
-                if ctx.cancelled():
-                    return
-            if services:
-                for service in services:
-                    await ctx.enter(mount(ctx.client, service))
-                    if ctx.cancelled():
-                        return
+            await ctx.wait_for(setup(ctx))
+            if ctx.cancelled():
+                return
             await ctx.wait()
 
 
@@ -185,20 +207,17 @@ async def _run_until_first_complete(
 
 
 def run(
-    connect: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
-    setup: Callable[[Context], Coroutine[Any, Any, None]] | None = None,
-    services: Iterable[object] | None = None,
+    setup: Callable[[Context], Coroutine[Any, Any, None]],
+    *options: ConnectOption,
     trap_signals: bool | tuple[signal.Signals, ...] = False,
-    **connect_opts: Any,
+    client: NATS | None = None,
 ) -> None:
     """Helper function to run an async program."""
 
     asyncio.run(
-        Context().run_forever(
-            connect,
+        Context(client=client).run_forever(
             setup,
-            services,
-            trap_signals,
-            **connect_opts,
+            *options,
+            trap_signals=trap_signals,
         )
     )

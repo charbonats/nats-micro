@@ -30,6 +30,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+watch = ["watchfiles"]
 build = ["pip-tools", "build", "wheel"]
 dev = [
     "black",
@@ -53,6 +54,9 @@ docs = [
     "pymdown-extensions",
     "termynal",
 ]
+
+[project.scripts]
+micro = "nats_contrib.micro.cli.root:run"
 
 [tool.setuptools.dynamic]
 version = { attr = "nats_contrib.micro.__about__.__version__" }

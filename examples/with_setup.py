@@ -1,5 +1,7 @@
 """Minimal example of NATS micro usage."""
 
+from nats_contrib.connect_opts import option
+
 from nats_contrib import micro
 
 
@@ -34,7 +36,10 @@ async def setup(ctx: micro.sdk.Context) -> None:
 
 if __name__ == "__main__":
     micro.sdk.run(
-        servers=["nats://localhost:4222"],
-        setup=setup,
+        # The setup function to call after the connection is established
+        setup,
+        # Add any connect option as required
+        option.WithServer("nats://localhost:4222"),
+        # Trap OS signals (SIGTERM/SIGINT by default)
         trap_signals=True,
     )

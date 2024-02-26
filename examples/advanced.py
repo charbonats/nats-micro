@@ -4,17 +4,48 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import signal
 from typing import Any
 
-from uvicorn import Config
+from nats_contrib.connect_opts import option
 
 from nats_contrib import micro
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+LOG_CONFIG = {
+    "version": 1,
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s - %(levelname)-7s - %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": ["console"],
+    },
+    "loggers": {
+        "micro": {
+            "level": "INFO",
+            "handlers": [],
+        },
+        "uvicorn.error": {
+            "level": "INFO",
+            "handlers": [],
+        },
+        "uvicorn.access": {
+            "level": "INFO",
+            "handlers": [],
+        },
+        "uvicorn.asgi": {
+            "level": "INFO",
+            "handlers": [],
+        },
+    },
+}
 
 logger = logging.getLogger("micro")
 
@@ -26,10 +57,42 @@ async def echo_handler(req: micro.Request) -> None:
     await req.respond(req.data())
 
 
-async def connect_and_setup(
+class Watcher:
+    """A class used to watch the connection to the NATS server."""
+
+    def __init__(self, ctx: micro.sdk.Context) -> None:
+        self.ctx = ctx
+
+    async def on_disconnected(self) -> None:
+        """Called when the connection to the NATS server is lost."""
+        logger.warn("disconnected from nats server")
+
+    async def on_close(self) -> None:
+        """Called when the connection to the NATS server is closed."""
+        if self.ctx.client.last_error:
+            logger.error(
+                "connection to nats server closed: %s", self.ctx.client.last_error
+            )
+        else:
+            logger.info("connection to nats server closed")
+        # Cancel the context
+        self.ctx.cancel()
+
+    async def on_reconnected(self) -> None:
+        """Called when the connection to the NATS server is re-established."""
+        logger.warn("reconnected to nats server")
+        # Reset all services stats
+        self.ctx.reset()
+
+    def attach(self, ctx: micro.sdk.Context) -> None:
+        """Attach the watcher to the context."""
+        ctx.client._disconnected_cb = self.on_disconnected
+        ctx.client._closed_cb = self.on_close
+        ctx.client._reconnected_cb = self.on_reconnected
+
+
+async def setup(
     ctx: micro.sdk.Context,
-    url: str,
-    max_reconnect: int,
 ) -> None:
     """Connect to the NATS server and setup the service.
 
@@ -38,41 +101,15 @@ async def connect_and_setup(
         url: The url of the NATS server.
         max_reconnect: The maximum number of reconnection attempts.
     """
-
+    # Create and attach a new watcher
+    watcher = Watcher(ctx)
+    watcher.attach(ctx)
     # Create a new micro service
-    service = micro.add_service(
-        ctx.client,
+    service = await ctx.add_service(
         name="demo-service",
         version="1.0.0",
         description="Demo service",
     )
-
-    # Define a closed_cb callback for nats
-    async def on_close() -> None:
-        if ctx.client.last_error:
-            logger.error("connection to nats server closed: %s", ctx.client.last_error)
-        else:
-            logger.info("connection to nats server closed")
-        # Cancel the context
-        ctx.cancel()
-
-    # Define a reconnected_cb callback for nats
-    async def on_reconnected() -> None:
-        logger.warn("reconnected to nats server")
-        service.reset()
-
-    # Connect to the nats server
-    logger.info("connecting to %s", url)
-    await ctx.connect(
-        url,
-        closed_cb=on_close,
-        reconnected_cb=on_reconnected,
-        max_reconnect_attempts=max_reconnect,
-    )
-
-    # Ensure that the service is closed on exit
-    await ctx.enter(service)
-
     # Add a group to the service
     group = service.add_group("demo")
     # Add an endpoint to the group
@@ -97,7 +134,7 @@ async def setup_http_server(ctx: micro.sdk.Context) -> None:
     class Server(uvicorn.Server):
         """A custom Uvicorn server that can be used as an async context manager."""
 
-        def __init__(self, config: Config) -> None:
+        def __init__(self, config: uvicorn.Config) -> None:
             super().__init__(config)
             # Track the asyncio task used to run the server
             self.task: asyncio.Task[None] | None = None
@@ -113,7 +150,12 @@ async def setup_http_server(ctx: micro.sdk.Context) -> None:
         async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
             self.should_exit = True
             if self.task:
-                await self.task
+                await asyncio.wait([self.task])
+                if self.task.cancelled():
+                    return
+                err = self.task.exception()
+                if err:
+                    raise err
 
     # Create a new starlette app
     app = Starlette()
@@ -124,26 +166,22 @@ async def setup_http_server(ctx: micro.sdk.Context) -> None:
         return JSONResponse({"message": "Hello, World!"})
 
     # Create a new server
-    server = Server(config=uvicorn.Config(app=app, loop="asyncio"))
+    server = Server(
+        config=uvicorn.Config(
+            app=app,
+            loop="asyncio",
+            access_log=True,
+            log_config=LOG_CONFIG,
+        )
+    )
     # Run the server
     await ctx.enter(server)
 
 
-async def main(
-    url: str = "nats://localhost:4222",
-    max_reconnect: int = 1,
-):
-    """Run the main event loop."""
-    # Create a new context
-    async with micro.sdk.Context() as ctx:
-        # Trap the SIGINT and SIGTERM signals
-        ctx.trap_signal(signal.Signals.SIGINT, signal.Signals.SIGTERM)
-        # Setup the service
-        await ctx.wait_for(connect_and_setup(ctx, url, max_reconnect))
-        # Wait for the context to be cancelled
-        await ctx.wait()
-
-
 if __name__ == "__main__":
     # Run the main event loop
-    asyncio.run(main(url="nats://localhost:4222"))
+    micro.sdk.run(
+        setup,
+        option.WithServer(url="nats://localhost:4222"),
+        option.WithAllowReconnect(max_attempts=2),
+    )
