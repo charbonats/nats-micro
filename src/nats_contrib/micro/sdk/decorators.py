@@ -136,7 +136,7 @@ def register_service(
     service: Any,
     prefix: str | None = None,
     now: Callable[[], datetime.datetime] | None = None,
-    generate_id: Callable[[], str] | None = None,
+    id_generator: Callable[[], str] | None = None,
     api_prefix: str | None = None,
 ) -> AsyncContextManager[Service]:
     class ServiceMounter:
@@ -157,7 +157,7 @@ def register_service(
                 service_spec.pending_bytes_limit_by_endpoint,
                 service_spec.pending_msgs_limit_by_endpoint,
                 now=now,
-                generate_id=generate_id,
+                id_generator=id_generator,
                 api_prefix=api_prefix,
             )
             await micro_service.start()

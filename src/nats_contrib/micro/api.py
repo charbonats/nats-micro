@@ -11,10 +11,7 @@ A typescript implementation is available in [nats.deno](https://github.com/nats-
 from __future__ import annotations
 
 import asyncio
-from dataclasses import asdict
 from datetime import datetime
-from json import dumps
-from secrets import token_hex
 from typing import Awaitable, Callable
 
 from nats.aio.client import Client as NatsClient
@@ -47,7 +44,7 @@ def add_service(
     pending_bytes_limit_by_endpoint: int | None = None,
     pending_msgs_limit_by_endpoint: int | None = None,
     now: Callable[[], datetime] | None = None,
-    generate_id: Callable[[], str] | None = None,
+    id_generator: Callable[[], str] | None = None,
     api_prefix: str | None = None,
 ) -> Service:
     """Create a new service.
@@ -70,12 +67,12 @@ def add_service(
         pending_bytes_limit_by_endpoint: The default pending bytes limit for each endpoint within the service.
         pending_msgs_limit_by_endpoint: The default pending messages limit for each endpoint within the service.
         now: The function to get the current time.
-        generate_id: The function to generate a unique service instance id.
+        id_generator: The function to generate a unique service instance id.
         api_prefix: The prefix of the control subjects.
     """
-    if generate_id is None:
-        generate_id = token_hex
-    instance_id = generate_id()
+    if id_generator is None:
+        id_generator = internal.default_id_generator
+    instance_id = id_generator()
     service_config = internal.ServiceConfig(
         name=name,
         version=version,
@@ -211,7 +208,7 @@ class Service:
         self._info = internal.new_service_info(self._id, config)
         self._ping_response = internal.new_ping_info(self._id, config)
         # Cache the serialized ping response
-        self._ping_response_message = dumps(asdict(self._ping_response)).encode()
+        self._ping_response_message = internal.encode_ping_info(self._ping_response)
         # Internal subscriptions
         self._ping_subscriptions: list[Subscription] = []
         self._info_subscriptions: list[Subscription] = []

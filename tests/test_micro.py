@@ -169,7 +169,7 @@ class TestMicroRequest(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint("the-subject", handler)
             result = await self.nats_client.request(
@@ -183,7 +183,7 @@ class TestMicroRequest(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint("the-subject", self.handler_with_error)
             with pytest.raises(micro_client.ServiceError) as exc_info:
@@ -200,7 +200,7 @@ class TestMicroRequest(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint("the-subject", self.handler)
             await self.nats_client.publish(
@@ -234,7 +234,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ):
             results = await self.micro_client.ping(max_count=1)
             assert results == [expected]
@@ -271,7 +271,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ):
             results = await self.micro_client.info(max_count=1)
             assert results == [expected]
@@ -309,7 +309,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
             now=self.now,
         ):
             results = await self.micro_client.stats(max_count=1)
@@ -339,7 +339,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             result = (
                 await self.micro_client.service(self.service_name())
@@ -362,7 +362,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
             now=self.now,
         ) as service:
             result = (
@@ -386,7 +386,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -418,7 +418,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -441,7 +441,7 @@ class TestMicro(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             assert not service.stopped()
             await service.stop()
@@ -464,7 +464,7 @@ class TestMicroClientIterators(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ):
             async with self.micro_client.ping_iter(max_count=1) as replies:
                 pongs = [pong async for pong in replies]
@@ -489,7 +489,7 @@ class TestMicroClientIterators(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ):
             async with self.micro_client.info_iter(max_count=1) as replies:
                 infos = [info async for info in replies]
@@ -514,7 +514,7 @@ class TestMicroClientIterators(MicroTestSetup):
             self.nats_client,
             self.service_name(),
             self.service_version(),
-            generate_id=self.service_id,
+            id_generator=self.service_id,
             now=self.now,
         ):
             async with self.micro_client.stats_iter(max_count=1) as replies:
@@ -535,7 +535,7 @@ class TestMicroEndpoint(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -569,7 +569,7 @@ class TestMicroEndpoint(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -608,7 +608,7 @@ class TestMicroEndpoint(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -623,7 +623,7 @@ class TestMicroEndpoint(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -646,7 +646,7 @@ class TestMicroEndpoint(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -663,7 +663,7 @@ class TestMicroEndpoint(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -691,7 +691,7 @@ class TestMicroEndpointWithSubject(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -726,7 +726,7 @@ class TestMicroEndpointWithSubject(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             await service.add_endpoint(
                 "endpoint1",
@@ -769,7 +769,7 @@ class TestMicroGroup(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             group = service.add_group("group1", queue_group="q1")
             await group.add_endpoint(
@@ -804,7 +804,7 @@ class TestMicroGroup(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             group = service.add_group("group1", queue_group="q1")
             await group.add_endpoint(
@@ -847,7 +847,7 @@ class TestMicroGroupWithSubgroup(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             group = service.add_group("group1", queue_group="q1")
             subgroup = group.add_group("group2", queue_group="q2")
@@ -883,7 +883,7 @@ class TestMicroGroupWithSubgroup(MicroTestSetup):
             self.service_name(),
             self.service_version(),
             now=self.now,
-            generate_id=self.service_id,
+            id_generator=self.service_id,
         ) as service:
             group = service.add_group("group1", queue_group="q1")
             subgroup = group.add_group("group2", queue_group="q2")

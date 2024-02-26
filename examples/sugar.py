@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from nats_contrib.connect_opts import option
-
 from nats_contrib import micro
 
 
@@ -33,21 +31,8 @@ class EchoService:
 
 
 async def setup(ctx: micro.sdk.Context) -> None:
-    """Configure the service.
+    """Configure the service."""
 
-    This function is executed after the NATS connection is established.
-    """
     await ctx.register_service(
         EchoService(some_configuration="some value"),
-    )
-
-
-if __name__ == "__main__":
-    micro.sdk.run(
-        # The setup function to call after the connection is established
-        setup,
-        # Add any connect option as required
-        option.WithServers(["nats://localhost:4222"]),
-        # Trap OS signals (SIGTERM/SIGINT by default)
-        trap_signals=True,
     )

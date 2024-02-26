@@ -10,6 +10,7 @@ A typescript implementation is available in [nats.deno](https://github.com/nats-
 
 from __future__ import annotations
 
+import secrets
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -243,6 +244,11 @@ def encode_info(info: ServiceInfo) -> bytes:
 def default_clock() -> datetime:
     """A default clock implementation."""
     return datetime.now(timezone.utc)
+
+
+def default_id_generator() -> str:
+    """A default ID generator implementation."""
+    return secrets.token_hex(16)
 
 
 class Timer:

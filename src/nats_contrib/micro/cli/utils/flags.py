@@ -10,7 +10,16 @@ T = TypeVar("T")
 
 @dataclass
 class Flag(Generic[T]):
-    """A command line flag."""
+    """A command line flag.
+
+    This class is used to centralize the definition of command line
+    flags and their default values. It is useful especially when
+    the same flag is used both as a global option and as a subcommand
+    option.
+
+    It also allows to get the value of the flag from the command line arguments or from the environment
+    variables.
+    """
 
     name: str
     metavar: str
@@ -38,8 +47,10 @@ class Flag(Generic[T]):
             kwargs["help"] = f"{self.help} (default: {self.default})"
         else:
             kwargs["help"] = self.help
+        if self.type is bool and self.default is False:
+            kwargs["action"] = "store_true"
         parser.add_argument(
-            f"--{self.name}",
+            f"--{self.name.replace('_', '-')}",
             *args,
             metavar=self.metavar,
             type=self.type,
@@ -49,6 +60,11 @@ class Flag(Generic[T]):
     def add_as_subcommand_option(self, parser: argparse.ArgumentParser) -> None:
         """Add the argument to the parser."""
         kwargs: dict[str, Any] = {}
+        args: list[str] = []
+        if self.alias:
+            args.extend(self.alias)
+        if self.short_option:
+            args.append(self.short_option)
         if self.repeat:
             kwargs["action"] = "append"
             kwargs["nargs"] = "?"
@@ -61,8 +77,11 @@ class Flag(Generic[T]):
             kwargs["help"] = f"{self.help} {' '.join(extras)}"
         else:
             kwargs["help"] = self.help
+        if self.type is bool and self.default is False:
+            kwargs["action"] = "store_true"
         parser.add_argument(
-            f"--{self.name}",
+            f"--{self.name.replace('_', '-')}",
+            *args,
             metavar=self.metavar,
             type=self.type,
             dest=f"{self.name}_",

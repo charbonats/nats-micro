@@ -241,7 +241,7 @@ As of now, the project is less than 1000 lines of code, with a cyclomatic comple
 This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.
 
 
-``` py linenums="1" title="examples/with_setup.py"
+``` py linenums="1" title="examples/minimal.py"
 from nats_contrib import micro
 
 
@@ -272,22 +272,14 @@ async def setup(ctx: micro.sdk.Context) -> None:
         subject="ECHO",
         handler=echo,
     )
-
-
-if __name__ == "__main__":
-    micro.sdk.run(
-        servers=["nats://localhost:4222"],
-        setup=setup,
-        trap_signals=True,
-    )
 ```
 
-After you've cloned the repo, you can run the example above with
+After you've cloned the repo and install the project, you can run the example above with the help of the `micro` CLI tool:
 
 <!-- termynal -->
 
 ```bash
-$ python examples/with_setup.py
+$ micro run examples.minimal:setup
 ```
 
 Once the service is running, you can use the `nats` CLI tool to send a request to the `demo.ECHO` subject:

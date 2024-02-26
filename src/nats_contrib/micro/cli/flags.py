@@ -10,6 +10,7 @@ from .utils import Flag
 class Flags:
     server = Flag(
         name="server",
+        short_option="-s",
         metavar="URL",
         type=str,
         help="NATS server URL",
