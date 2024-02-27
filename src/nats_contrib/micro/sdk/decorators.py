@@ -10,6 +10,8 @@ from typing_extensions import dataclass_transform
 
 from ..api import Group, Service, add_service
 from ..request import Handler
+from ..middleware import Middleware
+
 
 S = TypeVar("S", bound=Any)
 F = TypeVar("F", bound=Callable[..., Any])
@@ -179,6 +181,7 @@ def register_service(
     now: Callable[[], datetime.datetime] | None = None,
     id_generator: Callable[[], str] | None = None,
     api_prefix: str | None = None,
+    middlewares: list[Middleware] | None = None,
 ) -> AsyncContextManager[Service]:
     class ServiceMounter:
         def __init__(self) -> None:
@@ -218,6 +221,7 @@ def register_service(
                     queue_group=endpoint_spec.queue_group,
                     pending_msgs_limit=endpoint_spec.pending_msgs_limit,
                     pending_bytes_limit=endpoint_spec.pending_bytes_limit,
+                    middlewares=middlewares,
                 )
             return micro_service
 
@@ -232,6 +236,7 @@ async def register_group(
     service: Service,
     group: Any,
     prefix: str | None = None,
+    middlewares: list[Middleware] | None = None,
 ) -> None:
 
     group_spec = get_group_spec(group)
@@ -256,6 +261,7 @@ async def register_group(
             queue_group=endpoint_spec.queue_group,
             pending_msgs_limit=endpoint_spec.pending_msgs_limit,
             pending_bytes_limit=endpoint_spec.pending_bytes_limit,
+            middlewares=middlewares,
         )
 
 

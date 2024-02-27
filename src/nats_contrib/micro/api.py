@@ -26,6 +26,8 @@ from nats.errors import BadSubscriptionError
 from . import internal
 from .models import ServiceInfo, ServiceStats
 from .request import Handler, NatsRequest
+from .middleware import Middleware, apply_middlewares
+
 
 DEFAULT_QUEUE_GROUP = "q"
 """Queue Group name used across all services."""
@@ -153,6 +155,7 @@ class Group:
         metadata: dict[str, str] | None = None,
         pending_bytes_limit: int | None = None,
         pending_msgs_limit: int | None = None,
+        middlewares: list[Middleware] | None = None,
     ) -> Endpoint:
         """Add an endpoint to the group.
 
@@ -175,6 +178,7 @@ class Group:
             or self._config.pending_bytes_limit_by_endpoint,
             pending_msgs_limit=pending_msgs_limit
             or self._config.pending_msgs_limit_by_endpoint,
+            middlewares=middlewares,
         )
 
 
@@ -359,6 +363,7 @@ class Service:
         metadata: dict[str, str] | None = None,
         pending_bytes_limit: int | None = None,
         pending_msgs_limit: int | None = None,
+        middlewares: list[Middleware] | None = None,
     ) -> Endpoint:
         """Add an endpoint to the service.
 
@@ -387,7 +392,7 @@ class Service:
         # Create the endpoint
         ep = Endpoint(config)
         # Create the endpoint handler
-        subscription_handler = _create_handler(ep)
+        subscription_handler = _create_handler(ep, middlewares)
         # Start the endpoint subscription
         subscription = (
             await self._nc.subscribe(  # pyright: ignore[reportUnknownMemberType]
@@ -427,15 +432,21 @@ class Service:
         await self.stop()
 
 
-def _create_handler(endpoint: Endpoint) -> Callable[[Msg], Awaitable[None]]:
+def _create_handler(
+    endpoint: Endpoint, middlewares: list[Middleware] | None = None
+) -> Callable[[Msg], Awaitable[None]]:
     """A helper function called internally to create endpoint message handlers."""
+    if middlewares:
+        micro_handler = apply_middlewares(endpoint.config.handler, middlewares)
+    else:
+        micro_handler = endpoint.config.handler
 
     async def handler(msg: Msg) -> None:
         timer = internal.Timer()
         endpoint.stats.num_requests += 1
         request = NatsRequest(msg)
         try:
-            await endpoint.config.handler(request)
+            await micro_handler(request)
         except Exception as exc:
             endpoint.stats.num_errors += 1
             endpoint.stats.last_error = repr(exc)
