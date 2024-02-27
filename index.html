@@ -320,15 +320,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#code-complexity" class="md-nav__link">
-    <span class="md-ellipsis">
-      Code Complexity
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#example-usage" class="md-nav__link">
     <span class="md-ellipsis">
       Example usage
@@ -526,15 +517,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#code-complexity" class="md-nav__link">
-    <span class="md-ellipsis">
-      Code Complexity
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#example-usage" class="md-nav__link">
     <span class="md-ellipsis">
       Example usage
@@ -686,108 +668,9 @@
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">assert</span> <span class="n">service</span><span class="o">.</span><span class="n">stopped</span>
 </code></pre></div>
-<h2 id="code-complexity">Code Complexity</h2>
-<p>I used <a href="https://github.com/boyter/scc">scc</a> to count line of codes and get an idea of the complexity of the project:</p>
-<table id="scc-table">
-    <thead><tr>
-        <th>Language</th>
-        <th>Files</th>
-        <th>Lines</th>
-        <th>Blank</th>
-        <th>Comment</th>
-        <th>Code</th>
-        <th>Complexity</th>
-        <th>Bytes</th>
-    </tr></thead>
-    <tbody><tr>
-        <th>Python</th>
-        <th>7</th>
-        <th>1013</th>
-        <th>107</th>
-        <th>213</th>
-        <th>693</th>
-        <th>36</th>
-        <th>33264</th>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
-        <td></td>
-        <td>450</td>
-        <td>39</td>
-        <td>135</td>
-        <td>276</td>
-        <td>21</td>
-        <td>16881</td>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
-        <td></td>
-        <td>256</td>
-        <td>30</td>
-        <td>39</td>
-        <td>187</td>
-        <td>7</td>
-        <td>7245</td>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
-        <td></td>
-        <td>124</td>
-        <td>10</td>
-        <td>29</td>
-        <td>85</td>
-        <td>2</td>
-        <td>3826</td>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
-        <td></td>
-        <td>87</td>
-        <td>20</td>
-        <td>5</td>
-        <td>62</td>
-        <td>2</td>
-        <td>1834</td>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
-        <td></td>
-        <td>80</td>
-        <td>7</td>
-        <td>5</td>
-        <td>68</td>
-        <td>4</td>
-        <td>3120</td>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/__init__.py" target="_blank">src/micro/__init__.py</a></td>
-        <td></td>
-        <td>15</td>
-        <td>1</td>
-        <td>0</td>
-        <td>14</td>
-        <td>0</td>
-        <td>332</td>
-    </tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>
-        <td></td>
-        <td>1</td>
-        <td>0</td>
-        <td>0</td>
-        <td>1</td>
-        <td>0</td>
-        <td>26</td>
-    </tr></tbody>
-    <tfoot><tr>
-        <th>Total</th>
-        <th>7</th>
-        <th>1013</th>
-        <th>107</th>
-        <th>213</th>
-        <th>693</th>
-        <th>36</th>
-        <th>33264</th>
-    </tr></tfoot>
-</table>
-
-<p>As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 36. The <a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/api.py"><code>api.py</code></a> file is the most complex but should still be easy to understand.</p>
 <h2 id="example-usage">Example usage</h2>
 <p>This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.</p>
-<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">examples/with_setup.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1"> 1</a></span>
+<div class="highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">examples/minimal.py</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-9-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-9-3"> 3</a></span>
 <span class="normal"><a href="#__codelineno-9-4"> 4</a></span>
@@ -816,15 +699,7 @@
 <span class="normal"><a href="#__codelineno-9-27">27</a></span>
 <span class="normal"><a href="#__codelineno-9-28">28</a></span>
 <span class="normal"><a href="#__codelineno-9-29">29</a></span>
-<span class="normal"><a href="#__codelineno-9-30">30</a></span>
-<span class="normal"><a href="#__codelineno-9-31">31</a></span>
-<span class="normal"><a href="#__codelineno-9-32">32</a></span>
-<span class="normal"><a href="#__codelineno-9-33">33</a></span>
-<span class="normal"><a href="#__codelineno-9-34">34</a></span>
-<span class="normal"><a href="#__codelineno-9-35">35</a></span>
-<span class="normal"><a href="#__codelineno-9-36">36</a></span>
-<span class="normal"><a href="#__codelineno-9-37">37</a></span>
-<span class="normal"><a href="#__codelineno-9-38">38</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">nats_contrib</span> <span class="kn">import</span> <span class="n">micro</span>
+<span class="normal"><a href="#__codelineno-9-30">30</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">nats_contrib</span> <span class="kn">import</span> <span class="n">micro</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2"></a>
 <a id="__codelineno-9-3" name="__codelineno-9-3"></a>
 <a id="__codelineno-9-4" name="__codelineno-9-4"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">micro</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -854,27 +729,22 @@
 <a id="__codelineno-9-28" name="__codelineno-9-28"></a>        <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;ECHO&quot;</span><span class="p">,</span>
 <a id="__codelineno-9-29" name="__codelineno-9-29"></a>        <span class="n">handler</span><span class="o">=</span><span class="n">echo</span><span class="p">,</span>
 <a id="__codelineno-9-30" name="__codelineno-9-30"></a>    <span class="p">)</span>
-<a id="__codelineno-9-31" name="__codelineno-9-31"></a>
-<a id="__codelineno-9-32" name="__codelineno-9-32"></a>
-<a id="__codelineno-9-33" name="__codelineno-9-33"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-<a id="__codelineno-9-34" name="__codelineno-9-34"></a>    <span class="n">micro</span><span class="o">.</span><span class="n">sdk</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-<a id="__codelineno-9-35" name="__codelineno-9-35"></a>        <span class="n">servers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;nats://localhost:4222&quot;</span><span class="p">],</span>
-<a id="__codelineno-9-36" name="__codelineno-9-36"></a>        <span class="n">setup</span><span class="o">=</span><span class="n">setup</span><span class="p">,</span>
-<a id="__codelineno-9-37" name="__codelineno-9-37"></a>        <span class="n">trap_signals</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-9-38" name="__codelineno-9-38"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-<p>After you've cloned the repo, you can run the example above with</p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">python examples/with_setup.py</span><span data-ty></span></div>
+<p>After you've cloned the repo and install the project, you can run the example above with the help of the <code>micro</code> CLI tool:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">micro run examples/minimal.py</span><span data-ty></span></div>
 
-<p>Once the service is running, you can use the <code>nats</code> CLI tool to send a request to the <code>demo.ECHO</code> subject:</p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">nats req demo.ECHO &quot;Hello, world!&quot;</span><span data-ty><br>21:14:34 Sending request on &quot;demo.ECHO&quot;<br>21:14:34 Received with rtt 5.1048ms<br>Hello, World!<br></span></div>
+<p>Once the service is running, you can use the <code>micro</code> CLI tool to send a request to the <code>demo.ECHO</code> subject:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">micro request demo.ECHO &quot;Hello, world!&quot;</span><span data-ty><br>Hello, World!<br></span></div>
 
 <p>You should receive the same message back from the service.</p>
-<p>You can also use the <code>nats</code> CLI tool to discover the service:</p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">nats micro ls</span><span data-ty><br>╭──────────────────────────────────────────────────────────────────╮<br>│                        All Micro Services                        │<br>├──────────────┬─────────┬──────────────────────────┬──────────────┤<br>│ Name         │ Version │ ID                       │ Description  │<br>├──────────────┼─────────┼──────────────────────────┼──────────────┤<br>│ demo-service │ 1.0.0   │ ec17c596d93a7f3dafce9570 │ Demo service │<br>╰──────────────┴─────────┴──────────────────────────┴──────────────╯<br></span></div>
+<p>You can also use the <code>micro</code> CLI tool to discover the service:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">micro ping</span><span data-ty><br>[<br>  {<br>    &quot;name&quot;: &quot;demo-service&quot;,<br>    &quot;id&quot;: &quot;c9538e45b3739a339a217d26f3bcb376&quot;,<br>    &quot;version&quot;: &quot;1.0.0&quot;,<br>    &quot;metadata&quot;: {},<br>    &quot;type&quot;: &quot;io.nats.micro.v1.ping_response&quot;<br>  }<br>]<br></span></div>
 
-<p>You can also use the <code>nats</code> CLI tool to request service stats:</p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">nats micro info demo-service</span><span data-ty><br>Service Information<br><br>        Service: demo-service (ec17c596d93a7f3dafce9570)<br>    Description: Demo service<br>        Version: 1.0.0<br><br>Endpoints:<br><br>            Name: echo<br>            Subject: demo.ECHO<br>        Queue Group: q<br><br>Statistics for 1 Endpoint(s):<br><br>echo Endpoint Statistics:<br><br>        Requests: 0 in group q<br>    Processing Time: 0s (average 0s)<br>            Started: 2024-02-17 13:51:46 (51.15s ago)<br>            Errors: 0<br><br>Endpoint Specific Statistics:<br></span></div>
+<p>You can also use the <code>micro</code> CLI tool to request service stats:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">micro info demo-service</span><span data-ty><br>[<br>  {<br>    &quot;name&quot;: &quot;demo-service&quot;,<br>    &quot;id&quot;: &quot;c9538e45b3739a339a217d26f3bcb376&quot;,<br>    &quot;version&quot;: &quot;1.0.0&quot;,<br>    &quot;description&quot;: &quot;Demo service&quot;,<br>    &quot;metadata&quot;: {},<br>    &quot;endpoints&quot;: [<br>      {<br>        &quot;name&quot;: &quot;echo&quot;,<br>        &quot;subject&quot;: &quot;demo.ECHO&quot;,<br>        &quot;metadata&quot;: {},<br>        &quot;queue_group&quot;: &quot;q&quot;<br>      }<br>    ],<br>    &quot;type&quot;: &quot;io.nats.micro.v1.info_response&quot;<br>  }<br>]<br></span></div>
+
+<p>You can also use the <code>micro</code> CLI tool to request service stats:</p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">micro stats demo-service</span><span data-ty><br>[<br>  {<br>    &quot;name&quot;: &quot;demo-service&quot;,<br>    &quot;id&quot;: &quot;c9538e45b3739a339a217d26f3bcb376&quot;,<br>    &quot;version&quot;: &quot;1.0.0&quot;,<br>    &quot;started&quot;: &quot;2024-02-27T00:01:31.555469Z&quot;,<br>    &quot;endpoints&quot;: [<br>      {<br>        &quot;name&quot;: &quot;echo&quot;,<br>        &quot;subject&quot;: &quot;demo.ECHO&quot;,<br>        &quot;num_requests&quot;: 4,<br>        &quot;num_errors&quot;: 0,<br>        &quot;last_error&quot;: &quot;&quot;,<br>        &quot;processing_time&quot;: 875900,<br>        &quot;average_processing_time&quot;: 218975,<br>        &quot;queue_group&quot;: &quot;q&quot;,<br>        &quot;data&quot;: {}<br>      }<br>    ],<br>    &quot;metadata&quot;: {},<br>    &quot;type&quot;: &quot;io.nats.micro.v1.stats_response&quot;<br>  }<br>]<br></span></div>
 
 <h2 id="other-works">Other works</h2>
 <ul>
