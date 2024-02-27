@@ -9,9 +9,8 @@ from nats.aio.client import Client as NATS
 from typing_extensions import dataclass_transform
 
 from ..api import Group, Service, add_service
-from ..request import Handler
 from ..middleware import Middleware
-
+from ..request import Handler
 
 S = TypeVar("S", bound=Any)
 F = TypeVar("F", bound=Callable[..., Any])

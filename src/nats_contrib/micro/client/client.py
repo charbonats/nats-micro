@@ -57,7 +57,11 @@ class Client:
             error_code = response.headers.get("Nats-Service-Error-Code")
             if error_code:
                 raise ServiceError(
-                    int(error_code), response.headers.get("Nats-Service-Error", "")
+                    int(error_code),
+                    response.headers.get("Nats-Service-Error", ""),
+                    subject=subject,
+                    data=response.data,
+                    headers=response.headers or {},
                 )
 
         return response

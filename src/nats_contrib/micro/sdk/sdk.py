@@ -10,7 +10,7 @@ from nats.aio.client import Client as NATS
 from nats_contrib.connect_opts import ConnectOption, connect
 
 from ..api import Service, add_service
-from .decorators import register_service, register_group
+from .decorators import register_group, register_service
 
 T = TypeVar("T")
 E = TypeVar("E")

@@ -24,10 +24,9 @@ from nats.aio.subscription import (
 from nats.errors import BadSubscriptionError
 
 from . import internal
+from .middleware import Middleware, apply_middlewares
 from .models import ServiceInfo, ServiceStats
 from .request import Handler, NatsRequest
-from .middleware import Middleware, apply_middlewares
-
 
 DEFAULT_QUEUE_GROUP = "q"
 """Queue Group name used across all services."""

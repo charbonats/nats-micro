@@ -1,7 +1,8 @@
 """Minimal example of NATS micro usage."""
 
-from nats_contrib import micro
 from nats_contrib.connect_opts import option
+
+from nats_contrib import micro
 
 
 async def echo(req: micro.Request) -> None:
