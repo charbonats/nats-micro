@@ -124,8 +124,8 @@ class Group:
         self,
         name: str,
         queue_group: str | None = None,
-        pending_bytes_limit: int | None = None,
-        pending_msgs_limit: int | None = None,
+        pending_bytes_limit_by_endpoint: int | None = None,
+        pending_msgs_limit_by_endpoint: int | None = None,
     ) -> Group:
         """Add a group to the group.
 
@@ -138,8 +138,8 @@ class Group:
         config = self._config.child(
             name=name,
             queue_group=queue_group,
-            pending_bytes_limit=pending_bytes_limit,
-            pending_msgs_limit=pending_msgs_limit,
+            pending_bytes_limit=pending_bytes_limit_by_endpoint,
+            pending_msgs_limit=pending_msgs_limit_by_endpoint,
         )
         group = Group(config, self._service)
         return group

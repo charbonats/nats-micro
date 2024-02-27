@@ -75,6 +75,24 @@ class ServiceSpec:
     """
 
 
+@dataclass
+class GroupSpec:
+    name: str
+    """An alphanumeric human-readable string used to describe the group.
+
+    Multiple groups can have the same names.
+    """
+
+    queue_group: str | None = None
+    """The queue group of the group. When queue group is not set, it defaults to the queue group of the parent group or service."""
+
+    pending_msgs_limit: int | None = None
+    """The pending message limit for this group."""
+
+    pending_bytes_limit: int | None = None
+    """The pending bytes limit for this group."""
+
+
 @dataclass_transform(field_specifiers=(field,))
 def service(
     name: str,
@@ -99,6 +117,29 @@ def service(
         )
         dc = dataclass()(cls)
         dc.__service_spec__ = spec
+        return cls
+
+    return func
+
+
+@dataclass_transform(field_specifiers=(field,))
+def group(
+    name: str,
+    queue_group: str | None = None,
+    pending_msgs_limit_by_endpoint: int | None = None,
+    pending_bytes_limit_by_endpoint: int | None = None,
+) -> Callable[[type[S]], type[S]]:
+    """ "A decorator to define a micro service group."""
+
+    def func(cls: type[S]) -> type[S]:
+        spec = GroupSpec(
+            name=name,
+            queue_group=queue_group,
+            pending_msgs_limit=pending_msgs_limit_by_endpoint,
+            pending_bytes_limit=pending_bytes_limit_by_endpoint,
+        )
+        dc = dataclass()(cls)
+        dc.__group_spec__ = spec
         return cls
 
     return func
@@ -187,11 +228,49 @@ def register_service(
     return ServiceMounter()
 
 
+async def register_group(
+    service: Service,
+    group: Any,
+    prefix: str | None = None,
+) -> None:
+
+    group_spec = get_group_spec(group)
+    parent: Group | Service
+    if prefix:
+        parent = service.add_group(prefix)
+    else:
+        parent = service
+    parent_group = parent.add_group(
+        name=group_spec.name,
+        queue_group=group_spec.queue_group,
+        pending_msgs_limit_by_endpoint=group_spec.pending_msgs_limit,
+        pending_bytes_limit_by_endpoint=group_spec.pending_bytes_limit,
+    )
+    for endpoint_handler, endpoint_spec in get_endpoints_specs(group):
+        if endpoint_spec.disabled:
+            continue
+        await parent_group.add_endpoint(
+            name=endpoint_spec.name,
+            handler=endpoint_handler,
+            subject=endpoint_spec.subject,
+            queue_group=endpoint_spec.queue_group,
+            pending_msgs_limit=endpoint_spec.pending_msgs_limit,
+            pending_bytes_limit=endpoint_spec.pending_bytes_limit,
+        )
+
+
 def get_service_spec(instance: object) -> ServiceSpec:
     try:
         return instance.__service_spec__  # type: ignore
     except AttributeError:
         raise TypeError("ServiceRouter must be decorated with @service")
+
+
+def get_group_spec(instance: object) -> GroupSpec:
+    try:
+        return instance.__group_spec__  # type: ignore
+    except AttributeError:
+        raise TypeError("Group must be decorated with @group")
 
 
 def get_endpoints_specs(instance: object) -> Iterator[tuple[Handler, EndpointSpec]]:
