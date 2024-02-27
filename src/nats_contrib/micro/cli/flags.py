@@ -97,3 +97,38 @@ class Flags:
         if token := cls.token.get(args):
             connect_options.append(option.WithToken(token))
         return connect_options
+
+
+class RequestFlags:
+    timeout = Flag(
+        name="timeout",
+        short_option="-t",
+        metavar="SECONDS",
+        type=float,
+        help="Timeout for the request",
+        default=0.5,
+    )
+
+    max_count = Flag(
+        name="max_count",
+        short_option="-c",
+        metavar="COUNT",
+        type=int,
+        help="Maximum number of requests",
+        default=None,
+    )
+
+    max_interval = Flag(
+        name="max_interval",
+        short_option="-i",
+        metavar="SECONDS",
+        type=float,
+        help="Maximum interval between requests",
+        default=None,
+    )
+
+    @classmethod
+    def add_subcommand_options(cls, parser: argparse.ArgumentParser) -> None:
+        cls.timeout.add_as_subcommand_option(parser)
+        cls.max_count.add_as_subcommand_option(parser)
+        cls.max_interval.add_as_subcommand_option(parser)

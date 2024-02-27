@@ -208,9 +208,8 @@ class Context:
 
         Args:
             setup: A coroutine to setup the program.
-            services: A list of services to enter.
+            options: The options to pass to the connect method.
             trap_signals: If True, trap SIGINT and SIGTERM signals.
-            connect_opts: The options to pass to the connect method.
         """
         async with self as ctx:
             if trap_signals:

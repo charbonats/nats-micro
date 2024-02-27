@@ -133,109 +133,6 @@ await service.stop()
 assert service.stopped
 ```
 
-## Code Complexity
-
-I used [scc](https://github.com/boyter/scc) to count line of codes and get an idea of the complexity of the project:
-
-<table id="scc-table">
-	<thead><tr>
-		<th>Language</th>
-		<th>Files</th>
-		<th>Lines</th>
-		<th>Blank</th>
-		<th>Comment</th>
-		<th>Code</th>
-		<th>Complexity</th>
-		<th>Bytes</th>
-	</tr></thead>
-	<tbody><tr>
-		<th>Python</th>
-		<th>7</th>
-		<th>1013</th>
-		<th>107</th>
-		<th>213</th>
-		<th>693</th>
-		<th>36</th>
-		<th>33264</th>
-	</tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/api.py" target="_blank">src/micro/api.py</a></td>
-		<td></td>
-		<td>450</td>
-		<td>39</td>
-		<td>135</td>
-		<td>276</td>
-		<td>21</td>
-	    <td>16881</td>
-	</tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/internal.py" target="_blank">src/micro/internal.py</a></td>
-		<td></td>
-		<td>256</td>
-		<td>30</td>
-		<td>39</td>
-		<td>187</td>
-		<td>7</td>
-	    <td>7245</td>
-	</tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/request.py" target="_blank">src/micro/request.py</a></td>
-		<td></td>
-		<td>124</td>
-		<td>10</td>
-		<td>29</td>
-		<td>85</td>
-		<td>2</td>
-	    <td>3826</td>
-	</tr><tr>
-		<td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/models.py" target="_blank">src/micro/models.py</a></td>
-		<td></td>
-		<td>87</td>
-		<td>20</td>
-		<td>5</td>
-		<td>62</td>
-		<td>2</td>
-	    <td>1834</td>
-	</tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/testing.py" target="_blank">src/micro/testing.py</a></td>
-		<td></td>
-		<td>80</td>
-		<td>7</td>
-		<td>5</td>
-		<td>68</td>
-		<td>4</td>
-	    <td>3120</td>
-	</tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/__init__.py" target="_blank">src/micro/__init__.py</a></td>
-		<td></td>
-		<td>15</td>
-		<td>1</td>
-		<td>0</td>
-		<td>14</td>
-		<td>0</td>
-	    <td>332</td>
-	</tr><tr>
-        <td><a href="https://github.com/charbonats/nats-micro/blob/main/src/micro/__about__.py" target="_blank">src/micro/__about__.py</a></td>
-		<td></td>
-		<td>1</td>
-		<td>0</td>
-		<td>0</td>
-		<td>1</td>
-		<td>0</td>
-	    <td>26</td>
-	</tr></tbody>
-	<tfoot><tr>
-		<th>Total</th>
-		<th>7</th>
-		<th>1013</th>
-		<th>107</th>
-		<th>213</th>
-		<th>693</th>
-		<th>36</th>
-    	<th>33264</th>
-	</tr></tfoot>
-</table>
-
-As of now, the project is less than 1000 lines of code, with a cyclomatic complexity of 36. The [`api.py`](https://github.com/charbonats/nats-micro/blob/main/src/micro/api.py) file is the most complex but should still be easy to understand.
-
-
 ## Example usage
 
 This example shows how to create a simple service that echoes the request data back to the client and to run it until the application receives a SIGINT or a SIGTERM signal.
@@ -279,69 +176,97 @@ After you've cloned the repo and install the project, you can run the example ab
 <!-- termynal -->
 
 ```bash
-$ micro run examples.minimal:setup
+$ micro run examples/minimal.py
 ```
 
-Once the service is running, you can use the `nats` CLI tool to send a request to the `demo.ECHO` subject:
+Once the service is running, you can use the `micro` CLI tool to send a request to the `demo.ECHO` subject:
 
 <!-- termynal -->
 
 ```bash
-$ nats req demo.ECHO "Hello, world!"
+$ micro request demo.ECHO "Hello, world!"
 
-21:14:34 Sending request on "demo.ECHO"
-21:14:34 Received with rtt 5.1048ms
 Hello, World!
 ```
 
 You should receive the same message back from the service.
 
-You can also use the `nats` CLI tool to discover the service:
+You can also use the `micro` CLI tool to discover the service:
 
 <!-- termynal -->
 
 ```bash
-$ nats micro ls
+$ micro ping
 
-╭──────────────────────────────────────────────────────────────────╮
-│                        All Micro Services                        │
-├──────────────┬─────────┬──────────────────────────┬──────────────┤
-│ Name         │ Version │ ID                       │ Description  │
-├──────────────┼─────────┼──────────────────────────┼──────────────┤
-│ demo-service │ 1.0.0   │ ec17c596d93a7f3dafce9570 │ Demo service │
-╰──────────────┴─────────┴──────────────────────────┴──────────────╯
+[
+  {
+    "name": "demo-service",
+    "id": "c9538e45b3739a339a217d26f3bcb376",
+    "version": "1.0.0",
+    "metadata": {},
+    "type": "io.nats.micro.v1.ping_response"
+  }
+]
 ```
 
 
-You can also use the `nats` CLI tool to request service stats:
+You can also use the `micro` CLI tool to request service stats:
 
 <!-- termynal -->
 
 ```bash
-$ nats micro info demo-service
+$ micro info demo-service
 
-Service Information
+[
+  {
+    "name": "demo-service",
+    "id": "c9538e45b3739a339a217d26f3bcb376",
+    "version": "1.0.0",
+    "description": "Demo service",
+    "metadata": {},
+    "endpoints": [
+      {
+        "name": "echo",
+        "subject": "demo.ECHO",
+        "metadata": {},
+        "queue_group": "q"
+      }
+    ],
+    "type": "io.nats.micro.v1.info_response"
+  }
+]
+```
 
-        Service: demo-service (ec17c596d93a7f3dafce9570)
-    Description: Demo service
-        Version: 1.0.0
+You can also use the `micro` CLI tool to request service stats:
 
-Endpoints:
+<!-- termynal -->
 
-            Name: echo
-            Subject: demo.ECHO
-        Queue Group: q
+```bash
+$ micro stats demo-service
 
-Statistics for 1 Endpoint(s):
-
-echo Endpoint Statistics:
-
-        Requests: 0 in group q
-    Processing Time: 0s (average 0s)
-            Started: 2024-02-17 13:51:46 (51.15s ago)
-            Errors: 0
-
-Endpoint Specific Statistics:
+[
+  {
+    "name": "demo-service",
+    "id": "c9538e45b3739a339a217d26f3bcb376",
+    "version": "1.0.0",
+    "started": "2024-02-27T00:01:31.555469Z",
+    "endpoints": [
+      {
+        "name": "echo",
+        "subject": "demo.ECHO",
+        "num_requests": 4,
+        "num_errors": 0,
+        "last_error": "",
+        "processing_time": 875900,
+        "average_processing_time": 218975,
+        "queue_group": "q",
+        "data": {}
+      }
+    ],
+    "metadata": {},
+    "type": "io.nats.micro.v1.stats_response"
+  }
+]
 ```
 
 ## Other works
