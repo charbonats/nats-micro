@@ -188,6 +188,7 @@ class Context:
     async def run_forever(
         self,
         setup: Callable[[Context], Coroutine[Any, Any, None]],
+        /,
         *options: ConnectOption,
         trap_signals: bool | tuple[signal.Signals, ...] = False,
     ) -> None:
@@ -286,6 +287,7 @@ async def _run_until_first_complete(
 
 def run(
     setup: Callable[[Context], Coroutine[Any, Any, None]],
+    /,
     *options: ConnectOption,
     trap_signals: bool | tuple[signal.Signals, ...] = False,
     client: NATS | None = None,

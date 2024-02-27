@@ -1,6 +1,7 @@
 """Minimal example of NATS micro usage."""
 
 from nats_contrib import micro
+from nats_contrib.connect_opts import option
 
 
 async def echo(req: micro.Request) -> None:
@@ -33,3 +34,14 @@ async def setup(ctx: micro.sdk.Context) -> None:
         handler=echo,
     )
     print("Service is ready to accept requests")
+
+
+if __name__ == "__main__":
+    micro.sdk.run(
+        setup,
+        # Use options as needed
+        option.WithAllowReconnect(
+            max_attempts=3,
+            delay_seconds=10,
+        ),
+    )
