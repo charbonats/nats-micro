@@ -132,8 +132,8 @@ class Group:
         Args:
             name: The name of the group. Must be a valid NATS subject prefix.
             queue_group: The default queue group of the group. When queue group is not set, it defaults to the queue group of the parent group or service.
-            pending_bytes_limit: The default pending bytes limit for each endpoint within the group.
-            pending_msgs_limit: The default pending messages limit for each endpoint within the group.
+            pending_bytes_limit_by_endpoint: The default pending bytes limit for each endpoint within the group.
+            pending_msgs_limit_by_endpoint: The default pending messages limit for each endpoint within the group.
         """
         config = self._config.child(
             name=name,
