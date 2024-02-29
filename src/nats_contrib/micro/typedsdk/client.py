@@ -6,7 +6,7 @@ from nats.aio.client import Client as NatsClient
 
 from ..client.client import Client as MicroClient
 from ..client.client import ServiceError
-from .endpoint import E, EndpointRequest, ParamsT, R, T
+from .endpoint import E, RequestToSend, ParamsT, R, T
 from .type_adapter import TypeAdapter, TypeAdapterFactory, default_type_adapter
 
 
@@ -31,7 +31,7 @@ class Reply(Generic[ParamsT, T, R, E]):
 
     def __init__(
         self,
-        request: EndpointRequest[ParamsT, T, R, E],
+        request: RequestToSend[ParamsT, T, R, E],
         data: ReplyData | None,
         error: ServiceError | None,
         data_type_adapter: TypeAdapter[R],
@@ -83,7 +83,7 @@ class Client:
 
     async def send(
         self,
-        request: EndpointRequest[ParamsT, T, R, E],
+        request: RequestToSend[ParamsT, T, R, E],
         headers: dict[str, str] | None = None,
         timeout: float = 1,
     ) -> Reply[ParamsT, T, R, E]:

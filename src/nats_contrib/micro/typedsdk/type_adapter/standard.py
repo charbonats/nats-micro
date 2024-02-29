@@ -10,6 +10,27 @@ from typing import Any
 from .interface import T, TypeAdapter, TypeAdapterFactory
 
 
+class StandardTextAdapter(TypeAdapter[T]):
+    """A type adapter using standard library."""
+
+    def __init__(self, typ: type[T]) -> None:
+        self.typ = typ
+
+    def encode(self, message: T) -> bytes:
+        if self.typ is type(None):
+            if message:
+                raise ValueError("No value expected")
+            return b""
+        return str(message).encode("utf-8")
+
+    def decode(self, data: bytes) -> T:
+        if self.typ is type(None):
+            if data:
+                raise ValueError("No value expected")
+            return None  # type: ignore
+        return self.typ(data.decode("utf-8"))
+
+
 class StandardJSONAdapter(TypeAdapter[T]):
     """A type adapter using standard library."""
 

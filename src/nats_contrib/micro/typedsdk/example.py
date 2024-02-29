@@ -5,10 +5,8 @@ from dataclasses import dataclass
 from nats.aio.client import Client as NATS
 
 from nats_contrib import micro
-from nats_contrib.micro.typedsdk.api import mount
-from nats_contrib.micro.typedsdk.client import Client
-from nats_contrib.micro.typedsdk.endpoint import endpoint
-from nats_contrib.micro.typedsdk.service import AppService
+from nats_contrib.micro.typedsdk import Client, TypedService, endpoint, mount
+from nats_contrib.micro.typedsdk.endpoint import TypedRequest
 
 # Example usage: Common
 # This code should be available to both the client and the server
@@ -24,7 +22,6 @@ class MyParams:
     parameters=MyParams,
     request_schema=str,
     response_schema=int,
-    error_schema=str,
 )
 class MyEndpoint:
     """Test endpoint definition.
@@ -38,7 +35,7 @@ class MyEndpoint:
     """
 
 
-app = AppService(
+service = TypedService(
     name="test",
     version="0.0.1",
     description="Test service",
@@ -55,25 +52,30 @@ class MyEndpointImplementation(MyEndpoint):
 
     foo: int
 
-    async def handle(self, params: MyParams, request: str) -> int:
+    async def handle(
+        self,
+        request: TypedRequest[MyParams, str, int, None],
+    ) -> None:
         """Signature is the same as the parent class."""
-        # Device id is extracted from the message subject
+        # Parameters are extracted from the message subject
+        params = request.params()
         print(params.device_id)
-        # Request is the message payload decoded as a string
-        print(request)
+        # Request.data() is the message payload decoded as a string
+        value = request.data()
+        print(value)
         # The returned value is sent back to the client as a reply
         # There is no way to send headers at the moment
         # There is no way to send an error at the moment (though
         # this could already be implemented using middlewares)
-        return 42 + self.foo
+        await request.respond(len(value) + self.foo)
 
 
 async def setup(ctx: micro.sdk.Context) -> None:
     """An example setup function to start a micro service."""
     # Register the endpoint using a valid implementation
-    app.register_endpoint(MyEndpointImplementation(12))
+    service.register_endpoint(MyEndpointImplementation(12))
     # Mount the app
-    await mount(ctx, app)
+    await mount(ctx, service)
 
 
 # Examle usage: Client
