@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import inspect
 import signal
 from typing import Any, AsyncContextManager, Awaitable, Callable, Coroutine, TypeVar
 
@@ -157,6 +158,13 @@ class Context:
         loop = asyncio.get_event_loop()
         for sig in signals:
             loop.add_signal_handler(sig, self.cancel)
+
+    def push(self, callback: Callable[[], Awaitable[None] | None]) -> None:
+        """Add a callback to the exit stack."""
+        if inspect.iscoroutinefunction(callback):
+            self.exit_stack.push_async_callback(callback)
+        else:
+            self.exit_stack.callback(callback)
 
     async def enter(self, async_context: AsyncContextManager[T]) -> T:
         """Enter an async context."""

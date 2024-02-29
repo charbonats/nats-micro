@@ -6,8 +6,7 @@ from nats.aio.client import Client as NatsClient
 
 from ..client.client import Client as MicroClient
 from ..client.client import ServiceError
-from .endpoint import E, RequestToSend, ParamsT, R, T
-from .type_adapter import TypeAdapter, TypeAdapterFactory, default_type_adapter
+from .endpoint import E, ParamsT, R, RequestToSend, T
 
 
 class RequestError(Exception):
@@ -34,16 +33,12 @@ class Reply(Generic[ParamsT, T, R, E]):
         request: RequestToSend[ParamsT, T, R, E],
         data: ReplyData | None,
         error: ServiceError | None,
-        data_type_adapter: TypeAdapter[R],
-        error_type_adapter: TypeAdapter[E],
     ) -> None:
         if data is None and error is None:
             raise ValueError("data and error cannot be both None")
         self.request = request
         self._data = data
         self._error = error
-        self._data_type_adapter = data_type_adapter
-        self._error_type_adapter = error_type_adapter
 
     def raise_on_error(self) -> None:
         """Check if the reply is an error."""
@@ -62,24 +57,22 @@ class Reply(Generic[ParamsT, T, R, E]):
         if self._error:
             raise self._error
         assert self._data
-        return self._data_type_adapter.decode(self._data.data)
+        return self.request.spec.response.type_adapter.decode(self._data.data)
 
     def error(self) -> E:
         """Get the error."""
         if self._data:
             raise ValueError("No error")
         assert self._error
-        return self._error_type_adapter.decode(self._error.data)
+        return self.request.spec.error.type_adapter.decode(self._error.data)
 
 
 class Client:
     def __init__(
         self,
         client: NatsClient,
-        type_adapter: TypeAdapterFactory | None = None,
     ) -> None:
         self._client = MicroClient(client)
-        self._type_adapter = type_adapter or default_type_adapter()
 
     async def send(
         self,
@@ -88,7 +81,7 @@ class Client:
         timeout: float = 1,
     ) -> Reply[ParamsT, T, R, E]:
         """Send a request."""
-        data = self._type_adapter(request.request_type).encode(request.request)
+        data = request.spec.request.type_adapter.encode(request.request)
         try:
             response = await self._client.request(
                 request.subject,
@@ -101,13 +94,9 @@ class Client:
                 request,
                 None,
                 e,
-                self._type_adapter(request.response_type),
-                self._type_adapter(request.error_type),
             )
         return Reply(
             request,
             ReplyData(response.data, response.headers or {}),
             None,
-            self._type_adapter(request.response_type),
-            self._type_adapter(request.error_type),
         )

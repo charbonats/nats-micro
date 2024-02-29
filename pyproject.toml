@@ -63,7 +63,7 @@ version = { attr = "nats_contrib.micro.__about__.__version__" }
 
 [tool.pyright]
 pythonVersion = "3.8"
-include = ["tests", "src"]
+include = ["tests", "src", "examples"]
 strict = ["src"]
 exclude = ["**/.venv", "**/node_modules", "**/__pycache__", ".git", "**/build"]
 venv = ".venv"

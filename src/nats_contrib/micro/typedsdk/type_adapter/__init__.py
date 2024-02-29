@@ -1,3 +1,3 @@
-from .interface import TypeAdapter, TypeAdapterFactory, default_type_adapter
+from .interface import TypeAdapter, TypeAdapterFactory, sniff_type_adapter
 
-__all__ = ["TypeAdapterFactory", "TypeAdapter", "default_type_adapter"]
+__all__ = ["TypeAdapterFactory", "TypeAdapter", "sniff_type_adapter"]

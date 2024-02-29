@@ -34,10 +34,18 @@ class TypedService:
             []
         )
 
-    def register_endpoint(
+    def with_endpoints(
+        self, *endpoint: DecoratedEndpoint[Any, Any, Any, Any, Any]
+    ) -> TypedService:
+        service = self.__copy__()
+        for ep in endpoint:
+            service._add_endpoints(ep)
+        return service
+
+    def _add_endpoints(
         self, endpoint: DecoratedEndpoint[Any, Any, Any, Any, Any]
     ) -> None:
-        """Register an implementation of a supported endpoint."""
+        """Return a new service instance with an additional endpoint registered."""
         for candidate in self.endpoints:
             if isinstance(endpoint, candidate):
                 break
@@ -49,3 +57,15 @@ class TypedService:
                     f"Endpoint {endpoint} has the same address as {existing}"
                 )
         self._registered_endpoints.append(endpoint)
+
+    def __copy__(self) -> TypedService:
+        new_instance = TypedService(
+            name=self.name,
+            version=self.version,
+            description=self.description,
+            metadata=self.metadata,
+            endpoints=[ep for ep in self.endpoints],
+        )
+        for ep in self._registered_endpoints:
+            new_instance._registered_endpoints.append(ep)
+        return new_instance

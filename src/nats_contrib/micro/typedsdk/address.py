@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
-from typing import Any, Generic, TypeVar, overload
+from typing import Any, Generic, overload
 
-T = TypeVar("T")
-R = TypeVar("R")
-ParamsT = TypeVar("ParamsT")
+from .types import ParamsT
 
 MATCH_ALL = ">"
 MATCH_ONE = "*"

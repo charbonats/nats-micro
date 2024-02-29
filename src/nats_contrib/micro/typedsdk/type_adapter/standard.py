@@ -10,7 +10,7 @@ from typing import Any
 from .interface import T, TypeAdapter, TypeAdapterFactory
 
 
-class StandardTextAdapter(TypeAdapter[T]):
+class RawTypeAdapter(TypeAdapter[T]):
     """A type adapter using standard library."""
 
     def __init__(self, typ: type[T]) -> None:
@@ -21,14 +21,25 @@ class StandardTextAdapter(TypeAdapter[T]):
             if message:
                 raise ValueError("No value expected")
             return b""
+        if isinstance(message, bytes):
+            return message
         return str(message).encode("utf-8")
 
     def decode(self, data: bytes) -> T:
+        if self.typ is bytes:
+            return data  # type: ignore
         if self.typ is type(None):
             if data:
                 raise ValueError("No value expected")
             return None  # type: ignore
         return self.typ(data.decode("utf-8"))
+
+
+class RawTypeAdapterFactory(TypeAdapterFactory):
+    """A type adapter factory using standard library."""
+
+    def __call__(self, schema: type[T]) -> TypeAdapter[T]:
+        return RawTypeAdapter(schema)
 
 
 class StandardJSONAdapter(TypeAdapter[T]):
@@ -54,9 +65,10 @@ class StandardJSONAdapter(TypeAdapter[T]):
                 raise ValueError("No value expected")
             return None  # type: ignore
         result = json.loads(data)
-        if isinstance(result, self.typ):
-            return result
-        return self.typ(**result)
+        try:
+            return self.typ(**result)
+        except TypeError as exc:
+            raise ValueError("Failed to decode data") from exc
 
 
 class StandardJSONAdapterFactory(TypeAdapterFactory):
@@ -67,7 +79,7 @@ class StandardJSONAdapterFactory(TypeAdapterFactory):
 
 
 def _default_serializer(obj: Any) -> Any:
-    if isinstance(obj, datetime):
+    if isinstance(obj, datetime.datetime):
         return obj.isoformat()
     if isinstance(obj, (bytes, bytearray, set)):
         return list(obj)  # pyright: ignore[reportUnknownArgumentType]

@@ -3,36 +3,12 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, is_dataclass
 from types import new_class
-from typing import Any, Callable, Coroutine, Generic, Protocol, TypeVar, cast, overload
+from typing import Any, Callable, Coroutine, Generic, Iterable, Protocol, cast, overload
 
-from typing_extensions import ParamSpec, TypeAlias
-
-
-from .address import Address, ParamsT, R, T, new_address
-from .type_adapter import TypeAdapter
-
-S = ParamSpec("S")
-P = TypeVar("P", covariant=True)
-E = TypeVar("E")
-
-
-TypedHandler: TypeAlias = Callable[
-    ["TypedRequest[ParamsT, T, R, E]"], Coroutine[Any, Any, None]
-]
-
-
-class TypedRequest(Generic[ParamsT, T, R, E], metaclass=abc.ABCMeta):
-    def params(self) -> ParamsT: ...
-
-    def data(self) -> T: ...
-
-    def headers(self) -> dict[str, str]: ...
-
-    async def respond(self, data: R, headers: dict[str, str] | None = None) -> None: ...
-
-    async def respond_error(
-        self, data: E, headers: dict[str, str] | None = None
-    ) -> None: ...
+from .address import Address, new_address
+from .request import TypedRequest
+from .type_adapter import TypeAdapter, sniff_type_adapter
+from .types import E, P, ParamsT, R, S, T
 
 
 class EndpointProtocol(Generic[ParamsT, T, R, E], Protocol):
@@ -50,12 +26,32 @@ class ParametersFactory(Generic[S, P], Protocol):
 
 
 @dataclass
+class ErrorHandler(Generic[E]):
+    origin: type[BaseException]
+    code: int
+    description: str
+    fmt: Callable[[BaseException], E] | None = None
+
+
+@dataclass
 class Schema(Generic[T]):
     """Schema type."""
 
     type: type[T]
     content_type: str
     type_adapter: TypeAdapter[T]
+
+
+def schema(
+    type: type[T],
+    content_type: str | None = None,
+    type_adapter: TypeAdapter[T] | None = None,
+) -> Schema[T]:
+    if not content_type:
+        content_type = _sniff_content_type(type)
+    if not type_adapter:
+        type_adapter = sniff_type_adapter(type)
+    return Schema(type, content_type, type_adapter)
 
 
 @dataclass
@@ -70,7 +66,9 @@ class EndpointSpec(Generic[S, ParamsT, T, R, E]):
         request: Schema[T],
         response: Schema[R],
         error: Schema[E],
+        catch: Iterable[ErrorHandler[E]] | None = None,
         metadata: dict[str, Any] | None = None,
+        status_code: int = 200,
     ) -> None:
         self.address = cast(Address[ParamsT], new_address(address, parameters))  # type: ignore
         self.name = name
@@ -78,7 +76,9 @@ class EndpointSpec(Generic[S, ParamsT, T, R, E]):
         self.request = request
         self.response = response
         self.error = error
+        self.catch = catch or []
         self.metadata = metadata or {}
+        self.status_code = status_code
 
 
 @dataclass
@@ -88,10 +88,7 @@ class RequestToSend(Generic[ParamsT, T, R, E]):
     subject: str
     params: ParamsT
     request: T
-    params_type: type[ParamsT]
-    request_type: type[T]
-    response_type: type[R]
-    error_type: type[E]
+    spec: EndpointSpec[Any, ParamsT, T, R, E]
 
 
 class DecoratedEndpoint(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
@@ -157,10 +154,7 @@ class DecoratedEndpoint(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
             subject=subject,
             params=params,
             request=data,
-            params_type=spec.parameters,  # pyright: ignore[reportArgumentType]
-            request_type=spec.request.type,
-            response_type=spec.response.type,
-            error_type=spec.error.type,
+            spec=spec,
         )
 
 
@@ -174,6 +168,8 @@ class EndpointDecorator(Generic[S, ParamsT, T, R, E]):
         error: Schema[E],
         name: str | None = None,
         metadata: dict[str, Any] | None = None,
+        catch: Iterable[ErrorHandler[E]] | None = None,
+        status_code: int = 200,
     ) -> None:
         self.address = address
         self.name = name
@@ -182,6 +178,8 @@ class EndpointDecorator(Generic[S, ParamsT, T, R, E]):
         self.response = response
         self.error = error
         self.metadata = metadata or {}
+        self.catch = catch or []
+        self.status_code = status_code
 
     @overload
     def __call__(
@@ -205,6 +203,8 @@ class EndpointDecorator(Generic[S, ParamsT, T, R, E]):
             response=self.response,
             error=self.error,
             metadata=self.metadata,
+            catch=self.catch,
+            status_code=self.status_code,
         )
         new_cls = new_class(cls.__name__, (DecoratedEndpoint, cls), kwds={"spec": spec})
         return cast(type[DecoratedEndpoint[S, ParamsT, T, R, E]], new_cls)
@@ -215,9 +215,13 @@ def endpoint(
     address: str,
     *,
     parameters: None = None,
+    request_schema: None = None,
     response_schema: type[R] | Schema[R],
+    error_schema: None = None,
     name: str | None = None,
     metadata: dict[str, Any] | None = None,
+    catch: Iterable[ErrorHandler[None]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[Any, None, None, R, None]: ...
 
 
@@ -226,10 +230,13 @@ def endpoint(
     address: str,
     *,
     parameters: None = None,
+    request_schema: None = None,
     response_schema: type[R] | Schema[R],
     error_schema: type[E] | Schema[E],
     name: str | None = None,
     metadata: dict[str, Any] | None = None,
+    catch: Iterable[ErrorHandler[E]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[Any, None, None, R, E]: ...
 
 
@@ -240,8 +247,11 @@ def endpoint(
     parameters: None = None,
     request_schema: type[T] | Schema[T],
     response_schema: type[R] | Schema[R],
+    error_schema: None = None,
     name: str | None = None,
     metadata: dict[str, Any] | None = None,
+    catch: Iterable[ErrorHandler[None]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[Any, None, T, R, None]: ...
 
 
@@ -255,6 +265,8 @@ def endpoint(
     error_schema: type[E] | Schema[E],
     name: str | None = None,
     metadata: dict[str, Any] | None = None,
+    catch: Iterable[ErrorHandler[E]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[Any, None, T, R, E]: ...
 
 
@@ -268,6 +280,8 @@ def endpoint(
     error_schema: type[E] | Schema[E],
     name: str | None = None,
     metadata: dict[str, Any] | None = None,
+    catch: Iterable[ErrorHandler[E]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[S, ParamsT, None, R, E]: ...
 
 
@@ -280,6 +294,8 @@ def endpoint(
     response_schema: None = None,
     error_schema: type[E] | Schema[E],
     name: str | None = None,
+    catch: Iterable[ErrorHandler[E]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[S, ParamsT, T, None, E]: ...
 
 
@@ -292,6 +308,8 @@ def endpoint(
     response_schema: type[R] | Schema[R],
     error_schema: None = None,
     name: str | None = None,
+    catch: Iterable[ErrorHandler[None]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[S, ParamsT, T, R, None]: ...
 
 
@@ -304,6 +322,8 @@ def endpoint(
     response_schema: type[R] | Schema[R],
     error_schema: type[E] | Schema[E],
     name: str | None = None,
+    catch: Iterable[ErrorHandler[E]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[S, ParamsT, T, R, E]: ...
 
 
@@ -316,24 +336,26 @@ def endpoint(
     error_schema: Any = type(None),
     name: str | None = None,
     metadata: dict[str, Any] | None = None,
+    catch: Iterable[ErrorHandler[Any]] | None = None,
+    status_code: int = 200,
 ) -> EndpointDecorator[Any, Any, Any, Any, Any]:
     if not isinstance(request_schema, Schema):
         request_schema = Schema(
             type=request_schema,
             content_type=_sniff_content_type(request_schema),
-            type_adapter=_sniff_type_adapter(request_schema),
+            type_adapter=sniff_type_adapter(request_schema),
         )
     if not isinstance(response_schema, Schema):
         response_schema = Schema(
             type=response_schema,
             content_type=_sniff_content_type(response_schema),
-            type_adapter=_sniff_type_adapter(response_schema),
+            type_adapter=sniff_type_adapter(response_schema),
         )
     if not isinstance(error_schema, Schema):
         error_schema = Schema(
             type=error_schema,
             content_type=_sniff_content_type(error_schema),
-            type_adapter=_sniff_type_adapter(error_schema),
+            type_adapter=sniff_type_adapter(error_schema),
         )
     return EndpointDecorator(
         address=address,
@@ -343,6 +365,8 @@ def endpoint(
         error=error_schema,  # pyright: ignore[reportUnknownArgumentType]
         name=name,
         metadata=metadata,
+        catch=catch,
+        status_code=status_code,
     )
 
 
@@ -371,7 +395,3 @@ def _sniff_content_type(typ: type[Any]) -> str:
         f"Cannot guess content-type for class {typ}. "
         "Please specify the content-type explicitly."
     )
-
-
-def _sniff_type_adapter(typ: type[T]) -> TypeAdapter[T]:
-    raise NotImplementedError

@@ -12,7 +12,7 @@ import pydantic
 from .interface import T, TypeAdapter, TypeAdapterFactory
 
 
-class PydanticV1Adapter(TypeAdapter[T]):
+class PydanticV1JSONAdapter(TypeAdapter[T]):
     """A type adapter for Pydantic v1 models."""
 
     def __init__(self, typ: type[T]) -> None:
@@ -37,11 +37,11 @@ class PydanticV1Adapter(TypeAdapter[T]):
         return pydantic.parse_raw_as(self.typ, data)
 
 
-class PydanticV1AdapterFactory(TypeAdapterFactory):
+class PydanticV1JSONAdapterFactory(TypeAdapterFactory):
     """A type adapter factory for Pydantic v1 models."""
 
     def __call__(self, schema: type[T]) -> TypeAdapter[T]:
-        return PydanticV1Adapter(schema)
+        return PydanticV1JSONAdapter(schema)
 
 
 def _default_serializer(obj: Any) -> Any:

@@ -5,7 +5,7 @@ import pydantic
 from .interface import T, TypeAdapter, TypeAdapterFactory
 
 
-class PydanticV2Adapter(TypeAdapter[T]):
+class PydanticV2JSONAdapter(TypeAdapter[T]):
     """A type adapter for Pydantic v1 models."""
 
     def __init__(self, typ: type[T]) -> None:
@@ -27,8 +27,8 @@ class PydanticV2Adapter(TypeAdapter[T]):
         return self.adapter.validate_json(data)
 
 
-class PydanticV2AdapterFactory(TypeAdapterFactory):
+class PydanticV2JSONAdapterFactory(TypeAdapterFactory):
     """A type adapter factory for Pydantic v1 models."""
 
     def __call__(self, schema: type[T]) -> TypeAdapter[T]:
-        return PydanticV2Adapter(schema)
+        return PydanticV2JSONAdapter(schema)
