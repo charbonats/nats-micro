@@ -1,7 +1,14 @@
-from .api import attach, mount
+from .api import add_application, add_operation
+from .application import Application
 from .client import Client
+from .operation import operation
 from .request import TypedRequest
-from .endpoint import endpoint
-from .service import TypedService
 
-__all__ = ["TypedService", "TypedRequest", "Client", "endpoint", "mount", "attach"]
+__all__ = [
+    "Application",
+    "TypedRequest",
+    "Client",
+    "operation",
+    "add_application",
+    "add_operation",
+]

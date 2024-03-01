@@ -6,53 +6,58 @@ from typing import Callable
 from ..api import Endpoint, Service
 from ..request import Request
 from ..sdk import Context
-from .endpoint import DecoratedEndpoint
+from .application import Application
+from .async_api.renderer import create_docs_server
+from .operation import Operation
 from .request import TypedRequest
-from .service import TypedService
 from .types import E, ParamsT, R, S, T
 
 
-async def mount(
+async def add_application(
     ctx: Context,
-    service: TypedService,
+    app: Application,
+    http_port: int | None = None,
     queue_group: str | None = None,
     now: Callable[[], datetime.datetime] | None = None,
     id_generator: Callable[[], str] | None = None,
     api_prefix: str | None = None,
 ) -> Service:
-    """Start a service into a micro context."""
+    """Start an app in a micro context."""
 
     srv = await ctx.add_service(
-        name=service.name,
-        version=service.version,
-        description=service.description,
-        metadata=service.metadata,
+        name=app.name,
+        version=app.version,
+        description=app.description,
+        metadata=app.metadata,
         queue_group=queue_group,
         now=now,
         id_generator=id_generator,
         api_prefix=api_prefix,
     )
-    for (
-        endpoint
-    ) in service._registered_endpoints:  # pyright: ignore[reportPrivateUsage]
-        await attach(srv, endpoint, queue_group=queue_group)
+    for endpoint in app._registered_endpoints:  # pyright: ignore[reportPrivateUsage]
+        await add_operation(srv, endpoint, queue_group=queue_group)
+
+    if http_port is not None:
+        http_server = create_docs_server(app, http_port)
+        await ctx.enter(http_server)
+
     return srv
 
 
-async def attach(
+async def add_operation(
     service: Service,
-    endpoint: DecoratedEndpoint[S, ParamsT, T, R, E],
+    operation: Operation[S, ParamsT, T, R, E],
     queue_group: str | None = None,
 ) -> Endpoint:
-    """Attach an endpoint to a service."""
-    errors_to_catch = {e.origin: e for e in endpoint.spec.catch}
+    """Add an operation to a service."""
+    errors_to_catch = {e.origin: e for e in operation.spec.catch}
 
     async def handler(request: Request) -> None:
         try:
-            await endpoint.handle(
+            await operation.handle(
                 TypedRequest(
                     request,
-                    endpoint.spec,
+                    operation.spec,
                 )
             )
         except BaseException as e:
@@ -63,7 +68,7 @@ async def attach(
                     description = error.description
                     data = error.fmt(e) if error.fmt else None
                     if data:
-                        payload = endpoint.spec.error.type_adapter.encode(data)
+                        payload = operation.spec.error.type_adapter.encode(data)
                     else:
                         payload = b""
                     await request.respond_error(code, description, data=payload)
@@ -71,9 +76,9 @@ async def attach(
             raise
 
     return await service.add_endpoint(
-        endpoint.spec.name,
+        operation.spec.name,
         handler=handler,
-        subject=endpoint.spec.address.get_subject(),
-        metadata=endpoint.spec.metadata,
+        subject=operation.spec.address.get_subject(),
+        metadata=operation.spec.metadata,
         queue_group=queue_group,
     )

@@ -11,7 +11,7 @@ from .type_adapter import TypeAdapter, sniff_type_adapter
 from .types import E, P, ParamsT, R, S, T
 
 
-class EndpointProtocol(Generic[ParamsT, T, R, E], Protocol):
+class OperationProtocol(Generic[ParamsT, T, R, E], Protocol):
     def handle(
         self, request: TypedRequest[ParamsT, T, R, E]
     ) -> Coroutine[Any, Any, None]: ...
@@ -55,7 +55,7 @@ def schema(
 
 
 @dataclass
-class EndpointSpec(Generic[S, ParamsT, T, R, E]):
+class OperationSpec(Generic[S, ParamsT, T, R, E]):
     """Endpoint specification."""
 
     def __init__(
@@ -88,14 +88,14 @@ class RequestToSend(Generic[ParamsT, T, R, E]):
     subject: str
     params: ParamsT
     request: T
-    spec: EndpointSpec[Any, ParamsT, T, R, E]
+    spec: OperationSpec[Any, ParamsT, T, R, E]
 
 
-class DecoratedEndpoint(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
-    _spec: EndpointSpec[S, ParamsT, T, R, E]
+class Operation(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
+    _spec: OperationSpec[S, ParamsT, T, R, E]
 
     def __init_subclass__(
-        cls, spec: EndpointSpec[S, ParamsT, T, R, E] | None = None
+        cls, spec: OperationSpec[S, ParamsT, T, R, E] | None = None
     ) -> None:
         super().__init_subclass__()
         if not hasattr(cls, "_spec") and spec is None:
@@ -111,25 +111,25 @@ class DecoratedEndpoint(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @property
-    def spec(self) -> EndpointSpec[S, ParamsT, T, R, E]:
+    def spec(self) -> OperationSpec[S, ParamsT, T, R, E]:
         return self._spec
 
     @overload
     @classmethod
     def request(
-        cls: type[EndpointSpec[S, None, None, R, E]]
+        cls: type[OperationSpec[S, None, None, R, E]]
     ) -> RequestToSend[ParamsT, T, R, E]: ...
 
     @overload
     @classmethod
     def request(
-        cls: type[EndpointSpec[S, None, T, R, E]], data: T
+        cls: type[OperationSpec[S, None, T, R, E]], data: T
     ) -> RequestToSend[ParamsT, T, R, E]: ...
 
     @overload
     @classmethod
     def request(
-        cls: type[EndpointSpec[S, ParamsT, None, R, E]],
+        cls: type[OperationSpec[S, ParamsT, None, R, E]],
         *args: S.args,
         **kwargs: S.kwargs,
     ) -> RequestToSend[ParamsT, T, R, E]: ...
@@ -158,7 +158,7 @@ class DecoratedEndpoint(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
         )
 
 
-class EndpointDecorator(Generic[S, ParamsT, T, R, E]):
+class OperationDecorator(Generic[S, ParamsT, T, R, E]):
     def __init__(
         self,
         address: str,
@@ -184,18 +184,18 @@ class EndpointDecorator(Generic[S, ParamsT, T, R, E]):
     @overload
     def __call__(
         self,
-        cls: type[EndpointProtocol[ParamsT, T, R, E]],
-    ) -> type[DecoratedEndpoint[S, ParamsT, T, R, E]]: ...
+        cls: type[OperationProtocol[ParamsT, T, R, E]],
+    ) -> type[Operation[S, ParamsT, T, R, E]]: ...
 
     @overload
     def __call__(
         self,
         cls: type[object],
-    ) -> type[DecoratedEndpoint[S, ParamsT, T, R, E]]: ...
+    ) -> type[Operation[S, ParamsT, T, R, E]]: ...
 
-    def __call__(self, cls: type[Any]) -> type[DecoratedEndpoint[S, ParamsT, T, R, E]]:
+    def __call__(self, cls: type[Any]) -> type[Operation[S, ParamsT, T, R, E]]:
         name = self.name or cls.__name__
-        spec = EndpointSpec(
+        spec = OperationSpec(
             address=self.address,
             name=name,
             parameters=self.parameters,
@@ -206,12 +206,12 @@ class EndpointDecorator(Generic[S, ParamsT, T, R, E]):
             catch=self.catch,
             status_code=self.status_code,
         )
-        new_cls = new_class(cls.__name__, (DecoratedEndpoint, cls), kwds={"spec": spec})
-        return cast(type[DecoratedEndpoint[S, ParamsT, T, R, E]], new_cls)
+        new_cls = new_class(cls.__name__, (Operation, cls), kwds={"spec": spec})
+        return cast(type[Operation[S, ParamsT, T, R, E]], new_cls)
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: None = None,
@@ -222,11 +222,11 @@ def endpoint(
     metadata: dict[str, Any] | None = None,
     catch: Iterable[ErrorHandler[None]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[Any, None, None, R, None]: ...
+) -> OperationDecorator[Any, None, None, R, None]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: None = None,
@@ -237,11 +237,11 @@ def endpoint(
     metadata: dict[str, Any] | None = None,
     catch: Iterable[ErrorHandler[E]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[Any, None, None, R, E]: ...
+) -> OperationDecorator[Any, None, None, R, E]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: None = None,
@@ -252,11 +252,11 @@ def endpoint(
     metadata: dict[str, Any] | None = None,
     catch: Iterable[ErrorHandler[None]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[Any, None, T, R, None]: ...
+) -> OperationDecorator[Any, None, T, R, None]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: None = None,
@@ -267,11 +267,11 @@ def endpoint(
     metadata: dict[str, Any] | None = None,
     catch: Iterable[ErrorHandler[E]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[Any, None, T, R, E]: ...
+) -> OperationDecorator[Any, None, T, R, E]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: ParametersFactory[S, ParamsT],
@@ -282,11 +282,11 @@ def endpoint(
     metadata: dict[str, Any] | None = None,
     catch: Iterable[ErrorHandler[E]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[S, ParamsT, None, R, E]: ...
+) -> OperationDecorator[S, ParamsT, None, R, E]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: ParametersFactory[S, ParamsT],
@@ -296,11 +296,11 @@ def endpoint(
     name: str | None = None,
     catch: Iterable[ErrorHandler[E]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[S, ParamsT, T, None, E]: ...
+) -> OperationDecorator[S, ParamsT, T, None, E]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: ParametersFactory[S, ParamsT],
@@ -310,11 +310,11 @@ def endpoint(
     name: str | None = None,
     catch: Iterable[ErrorHandler[None]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[S, ParamsT, T, R, None]: ...
+) -> OperationDecorator[S, ParamsT, T, R, None]: ...
 
 
 @overload
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: ParametersFactory[S, ParamsT],
@@ -324,10 +324,10 @@ def endpoint(
     name: str | None = None,
     catch: Iterable[ErrorHandler[E]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[S, ParamsT, T, R, E]: ...
+) -> OperationDecorator[S, ParamsT, T, R, E]: ...
 
 
-def endpoint(
+def operation(
     address: str,
     *,
     parameters: Any = type(None),
@@ -338,7 +338,7 @@ def endpoint(
     metadata: dict[str, Any] | None = None,
     catch: Iterable[ErrorHandler[Any]] | None = None,
     status_code: int = 200,
-) -> EndpointDecorator[Any, Any, Any, Any, Any]:
+) -> OperationDecorator[Any, Any, Any, Any, Any]:
     if not isinstance(request_schema, Schema):
         request_schema = Schema(
             type=request_schema,
@@ -357,7 +357,7 @@ def endpoint(
             content_type=_sniff_content_type(error_schema),
             type_adapter=sniff_type_adapter(error_schema),
         )
-    return EndpointDecorator(
+    return OperationDecorator(
         address=address,
         parameters=parameters,
         request=request_schema,  # pyright: ignore[reportUnknownArgumentType]

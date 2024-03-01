@@ -6,7 +6,7 @@ from nats.aio.client import Client as NatsClient
 
 from ..client.client import Client as MicroClient
 from ..client.client import ServiceError
-from .endpoint import E, ParamsT, R, RequestToSend, T
+from .operation import E, ParamsT, R, RequestToSend, T
 
 
 class RequestError(Exception):

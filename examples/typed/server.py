@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 
 from nats_contrib import micro
-from nats_contrib.micro.typedsdk import mount
+from nats_contrib.micro.typedsdk import add_application
 
 from my_endpoint_implementation import MyEndpointImplementation
-from my_service import my_service
+
+from app import app
 
 
-logger = logging.getLogger("micro")
+logger = logging.getLogger("app")
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -25,12 +26,13 @@ async def setup(ctx: micro.sdk.Context) -> None:
 
     logger.info("Configuring the service")
 
-    # Create a new service instance
-    service = my_service.with_endpoints(
-        MyEndpointImplementation(12),
-    )
-
     # Mount the app
-    await mount(ctx, service)
+    await add_application(
+        ctx,
+        app=app.with_endpoints(
+            MyEndpointImplementation(12),
+        ),
+        http_port=8000,
+    )
 
     logger.info("Service is ready and listening to requests")

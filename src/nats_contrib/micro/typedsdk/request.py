@@ -6,7 +6,7 @@ from ..request import Request
 from .types import E, ParamsT, R, T
 
 if TYPE_CHECKING:
-    from .endpoint import EndpointSpec
+    from .operation import OperationSpec
 
 
 class TypedRequest(Generic[ParamsT, T, R, E]):
@@ -15,7 +15,7 @@ class TypedRequest(Generic[ParamsT, T, R, E]):
     def __init__(
         self,
         request: Request,
-        spec: EndpointSpec[Any, ParamsT, T, R, E],
+        spec: OperationSpec[Any, ParamsT, T, R, E],
     ) -> None:
         data = spec.request.type_adapter.decode(request.data())
         params = spec.address.get_params(request.subject())

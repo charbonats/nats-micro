@@ -111,6 +111,7 @@ class Address(Generic[ParamsT]):
         self.subject = subject
         self.parameters = parameters
         self.placeholders = Placeholders.from_subject(subject, parameters)
+        self._fields: list[str] = []
         self._verify()
 
     def __str__(self) -> str:
@@ -130,6 +131,7 @@ class Address(Generic[ParamsT]):
         if self.parameters is type(None):
             return
         parameters_fields = _get_fields(self.parameters)
+        self._fields = parameters_fields
         # Verify that all parameters are present
         for param_field in parameters_fields:
             if param_field not in self.placeholders.mapping and not (

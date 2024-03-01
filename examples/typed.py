@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from nats.aio.client import Client as NATS
 
 from nats_contrib import micro
-from nats_contrib.micro.typedsdk import Client, TypedService, endpoint, mount
-from nats_contrib.micro.typedsdk.endpoint import ErrorHandler, TypedRequest
+from nats_contrib.micro.typedsdk import Client, Application, endpoint, add_application
+from nats_contrib.micro.typedsdk.operation import ErrorHandler, TypedRequest
 
 # Example usage: Endpoint Definition
 # This code should be available to both the client and the server
@@ -52,11 +52,11 @@ class MyEndpoint:
 # Example usage: App definition
 # This code should be available to both the client and the server
 
-service = TypedService(
+service = Application(
     name="test",
     version="0.0.1",
     description="Test service",
-    endpoints=[MyEndpoint],
+    operations=[MyEndpoint],
 )
 
 # Example usage: Server
@@ -94,7 +94,7 @@ async def setup(ctx: micro.sdk.Context) -> None:
     # Create a new endpoint instance
     my_endpoint = MyEndpointImplementation(12)
     # Mount the app
-    await mount(ctx, service.with_endpoints(my_endpoint))
+    await add_application(ctx, service.with_endpoints(my_endpoint))
 
 
 # Examle usage: Client
