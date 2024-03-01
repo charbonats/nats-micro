@@ -3,9 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
-from nats_contrib.micro.typedsdk import TypedRequest
-
-from my_endpoint import MyEndpoint, MyParams, MyRequest, MyResponse
+from my_endpoint import MyEndpointRequest, MyEndpoint, MyResponse
 
 
 logger = logging.getLogger("my-endpoint")
@@ -21,11 +19,9 @@ class MyEndpointImplementation(MyEndpoint):
 
     foo: int
 
-    async def handle(
-        self,
-        request: TypedRequest[MyParams, MyRequest, MyResponse, str],
-    ) -> None:
-        """Signature is the same as the parent class."""
+    async def handle(self, request: MyEndpointRequest) -> None:
+        """Signature is constrained by endpoint definition."""
+
         # Parameters are extracted from the message subject
         params = request.params()
         logger.debug(f"Received request for device: {params.device_id}")
