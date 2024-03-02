@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
 
 from nats_contrib.connect_opts import ConnectOption
 
-from ... import sdk
+from ...context import Context, run
 from ..flags import Flags
 
 if TYPE_CHECKING:
@@ -64,7 +64,7 @@ def run_cmd(args: argparse.Namespace) -> None:
             )
         )
     else:
-        sdk.run(
+        run(
             setup,
             *connect_options,
             trap_signals=True,
@@ -74,10 +74,10 @@ def run_cmd(args: argparse.Namespace) -> None:
 async def run_with_watcher(
     watch_directories: list[str],
     connect_options: Iterable[ConnectOption],
-    setup: Callable[[sdk.Context], Coroutine[None, None, None]],
+    setup: Callable[[Context], Coroutine[None, None, None]],
 ) -> None:
     while True:
-        async with sdk.Context() as ctx:
+        async with Context() as ctx:
             ctx.trap_signal()
             watcher = _Watcher(ctx, *watch_directories)
             await ctx.connect(*connect_options)
@@ -97,7 +97,7 @@ async def run_with_watcher(
 class _Watcher:
     def __init__(
         self,
-        ctx: sdk.Context,
+        ctx: Context,
         *path: str,
     ) -> None:
 
@@ -126,7 +126,7 @@ class _Watcher:
         return None
 
 
-def _import(path: str) -> Callable[[sdk.Context], Coroutine[None, None, None]]:
+def _import(path: str) -> Callable[[Context], Coroutine[None, None, None]]:
     filename = Path(path)
     if filename.is_file():
         mod = filename.resolve(True).stem

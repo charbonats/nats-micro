@@ -4,12 +4,7 @@ from dataclasses import dataclass
 
 from nats.aio.client import Client as NATS
 
-from nats_contrib import micro
-from nats_contrib.micro.typedsdk import Client, Application, endpoint, add_application
-from nats_contrib.micro.typedsdk.operation import ErrorHandler, TypedRequest
-
-# Example usage: Endpoint Definition
-# This code should be available to both the client and the server
+from nats_contrib import micro, asyncapi
 
 
 @dataclass
@@ -22,14 +17,14 @@ class MyRequest:
     value: int
 
 
-@endpoint(
+@asyncapi.operation(
     address="foo.{device_id}",
     parameters=MyParams,
     request_schema=MyRequest,
     response_schema=int,
     error_schema=str,
     catch=[
-        ErrorHandler(
+        asyncapi.ErrorHandler(
             ValueError,
             400,
             "Bad request",
@@ -48,11 +43,31 @@ class MyEndpoint:
     data and receive the correct data.
     """
 
+    def __init__(self, constant: int) -> None:
+        self.constant = constant
+
+    async def handle(
+        self,
+        msg: asyncapi.Message[MyParams, MyRequest, int, str],
+    ) -> None:
+        """Signature is the same as the parent class."""
+        # Parameters are extracted from the message subject
+        params = msg.params()
+        print(params.device_id)
+        # Request.data() is the message payload decoded as a string
+        data = msg.payload()
+        print(data.value)
+        # Send a reply
+        await msg.respond(data.value * self.constant)
+        # We could also respond with an error
+        # await request.respond_error(409, "Conflict", data="Some error data")
+
 
 # Example usage: App definition
 # This code should be available to both the client and the server
 
-service = Application(
+service = asyncapi.Application(
+    id="https://github.com/charbonats/nats-micro/examples/typed",
     name="test",
     version="0.0.1",
     description="Test service",
@@ -63,38 +78,10 @@ service = Application(
 # This code is required to "run the application" as a server
 
 
-@dataclass
-class MyEndpointImplementation(MyEndpoint):
-    """An implementation of the MyEndpoint."""
-
-    foo: int
-
-    async def handle(
-        self,
-        request: TypedRequest[MyParams, MyRequest, int, str],
-    ) -> None:
-        """Signature is the same as the parent class."""
-        # Parameters are extracted from the message subject
-        params = request.params()
-        print(params.device_id)
-        # Request.data() is the message payload decoded as a string
-        data = request.data()
-        print(data.value)
-        # The returned value is sent back to the client as a reply
-        # There is no way to send headers at the moment
-        # There is no way to send an error at the moment (though
-        # this could already be implemented using middlewares)
-        await request.respond(data.value + self.foo)
-        # We could also respond with an error
-        # await request.respond_error(409, "Conflict", data="Some error data")
-
-
-async def setup(ctx: micro.sdk.Context) -> None:
+async def setup(ctx: micro.Context) -> None:
     """An example setup function to start a micro service."""
-    # Create a new endpoint instance
-    my_endpoint = MyEndpointImplementation(12)
     # Mount the app
-    await add_application(ctx, service.with_endpoints(my_endpoint))
+    await asyncapi.micro.add_application(ctx, service.with_endpoints(MyEndpoint(2)))
 
 
 # Examle usage: Client
@@ -107,7 +94,7 @@ async def request(
     """An example function to send a request to a micro service."""
     # Usage:
     # 1. Create a client
-    client = Client(nats_client)
+    client = asyncapi.micro.Client(nats_client)
     # 2. Send a request
     # This will not raise an error if the reply received indicates
     # an error through the status code
@@ -122,7 +109,7 @@ async def request(
     try:
         data = response.data()
         print(data)
-    except micro.ServiceError:
+    except asyncapi.OperationError:
         # You can access the decoded error in such case
         error = response.error()
         print(error)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 import pydantic
 
-from .spec import (
+from .asyncapi import (
     Action,
     AsyncAPI,
     Channel,
@@ -24,6 +24,18 @@ if TYPE_CHECKING:
     from ..application import Application
 
 
+if pydantic.__version__.startswith("1."):
+    default_schema_of: SchemaAdapter = pydantic.schema_of  # type: ignore
+elif pydantic.__version__.startswith("2."):
+
+    def default_schema_of(obj: Any) -> dict[str, Any]:
+        """Return the schema of an object."""
+        return pydantic.TypeAdapter(obj).json_schema()
+
+else:
+    raise ImportError("Unsupported pydantic version")
+
+
 class SchemaAdapter(Protocol):
     """Schema adapter protocol."""
 
@@ -36,7 +48,7 @@ def build_spec(
     app: Application, schema_adapter: SchemaAdapter | None = None
 ) -> AsyncAPI:
     """Build an AsyncAPI specification from an application."""
-    schema_adapter = schema_adapter or pydantic.schema_of
+    schema_adapter = schema_adapter or default_schema_of
     # Start be building app info
     info = Info(
         title=app.name,

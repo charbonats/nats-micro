@@ -27,7 +27,7 @@ class MyEndpointImplementation(MyEndpoint):
         logger.debug(f"Received request for device: {params.device_id}")
 
         # Request.data() is the message payload decoded as a string
-        data = request.data()
+        data = request.payload()
         logger.debug(f"Request data is: {data}")
 
         # Reply to the request

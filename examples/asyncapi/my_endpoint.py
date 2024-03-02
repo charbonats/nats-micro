@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from nats_contrib.micro.typedsdk import operation, TypedRequest
-from nats_contrib.micro.typedsdk.operation import ErrorHandler
+from nats_contrib.asyncapi import operation, Message, ErrorHandler
 
 # Purely optional, but it can be used to type hint the request
-MyEndpointRequest = TypedRequest["MyParams", "MyRequest", "MyResponse", str]
+MyEndpointRequest = Message["MyParams", "MyRequest", "MyResponse", str]
 
 
 @dataclass

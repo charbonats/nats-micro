@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from nats_contrib.micro.typedsdk import Application
+from nats_contrib.asyncapi import Application
 
 from my_endpoint import MyEndpoint
 

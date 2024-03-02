@@ -27,7 +27,7 @@ If we try to map the concepts of the typed SDK to the concepts of the regular SD
 
 - `Application` is the equivalent of `Service`.
 
-- `Channel` is the equivalent of `Subject`.
+- `Channel` does not really have an equivalent. It sits somewhere between a subject and an endpoint.
 
 - `Operation` is the equivalent of `Endpoint`.
 

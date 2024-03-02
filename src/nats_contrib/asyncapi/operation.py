@@ -6,14 +6,14 @@ from types import new_class
 from typing import Any, Callable, Coroutine, Generic, Iterable, Protocol, cast, overload
 
 from .address import Address, new_address
-from .request import TypedRequest
+from .message import Message
 from .type_adapter import TypeAdapter, sniff_type_adapter
 from .types import E, P, ParamsT, R, S, T
 
 
 class OperationProtocol(Generic[ParamsT, T, R, E], Protocol):
     def handle(
-        self, request: TypedRequest[ParamsT, T, R, E]
+        self, request: Message[ParamsT, T, R, E]
     ) -> Coroutine[Any, Any, None]: ...
 
 
@@ -82,7 +82,7 @@ class OperationSpec(Generic[S, ParamsT, T, R, E]):
 
 
 @dataclass
-class RequestToSend(Generic[ParamsT, T, R, E]):
+class OperationRequest(Generic[ParamsT, T, R, E]):
     """Endpoint request."""
 
     subject: str
@@ -105,9 +105,7 @@ class Operation(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
         cls._spec = spec
 
     @abc.abstractmethod
-    def handle(
-        self, request: TypedRequest[ParamsT, T, R, E]
-    ) -> Coroutine[Any, Any, None]:
+    def handle(self, request: Message[ParamsT, T, R, E]) -> Coroutine[Any, Any, None]:
         raise NotImplementedError
 
     @property
@@ -118,13 +116,13 @@ class Operation(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
     @classmethod
     def request(
         cls: type[OperationSpec[S, None, None, R, E]]
-    ) -> RequestToSend[ParamsT, T, R, E]: ...
+    ) -> OperationRequest[ParamsT, T, R, E]: ...
 
     @overload
     @classmethod
     def request(
         cls: type[OperationSpec[S, None, T, R, E]], data: T
-    ) -> RequestToSend[ParamsT, T, R, E]: ...
+    ) -> OperationRequest[ParamsT, T, R, E]: ...
 
     @overload
     @classmethod
@@ -132,25 +130,25 @@ class Operation(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
         cls: type[OperationSpec[S, ParamsT, None, R, E]],
         *args: S.args,
         **kwargs: S.kwargs,
-    ) -> RequestToSend[ParamsT, T, R, E]: ...
+    ) -> OperationRequest[ParamsT, T, R, E]: ...
 
     @overload
     @classmethod
     def request(
         cls, data: T, *args: S.args, **kwargs: S.kwargs
-    ) -> RequestToSend[ParamsT, T, R, E]: ...
+    ) -> OperationRequest[ParamsT, T, R, E]: ...
 
     @classmethod
     def request(
         cls, data: Any = ..., *args: Any, **kwargs: Any
-    ) -> RequestToSend[ParamsT, T, R, E]:
+    ) -> OperationRequest[ParamsT, T, R, E]:
         spec = cls._spec  # pyright: ignore[reportGeneralTypeIssues]
         if data is ...:
             if spec.request.type is not type(None):
                 raise TypeError("Missing request data")
         params = spec.parameters(*args, **kwargs)
         subject = spec.address.get_subject(params)
-        return RequestToSend(
+        return OperationRequest(
             subject=subject,
             params=params,
             request=data,
@@ -206,7 +204,7 @@ class OperationDecorator(Generic[S, ParamsT, T, R, E]):
             catch=self.catch,
             status_code=self.status_code,
         )
-        new_cls = new_class(cls.__name__, (Operation, cls), kwds={"spec": spec})
+        new_cls = new_class(cls.__name__, (cls, Operation), kwds={"spec": spec})
         return cast(type[Operation[S, ParamsT, T, R, E]], new_cls)
 
 

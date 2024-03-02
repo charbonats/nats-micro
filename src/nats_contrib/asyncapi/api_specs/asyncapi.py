@@ -3,7 +3,34 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+import pydantic
 from pydantic import BaseModel, ConfigDict, Field
+
+if pydantic.__version__.startswith("1."):
+
+    class Reference(BaseModel):  # pyright: ignore[reportRedeclaration]
+        """A simple object to allow referencing other components in the specification, within the same or external AsyncAPI document. By using JSON pointers (i.e. `{"$ref": "#/components/schemas/MySchema"}`), the properties of the referenced structure can be practically re-used in the specification."""
+
+        ref: str = Field(alias="$ref")
+
+        @classmethod
+        def from_ref(cls, ref: str) -> Reference:
+            return cls(ref=ref)  # type: ignore
+
+        class Config:
+            allow_population_by_field_name = True
+
+else:
+
+    class Reference(BaseModel):
+        """A simple object to allow referencing other components in the specification, within the same or external AsyncAPI document. By using JSON pointers (i.e. `{"$ref": "#/components/schemas/MySchema"}`), the properties of the referenced structure can be practically re-used in the specification."""
+
+        model_config = ConfigDict(populate_by_name=True)
+        ref: str = Field(alias="$ref")
+
+        @classmethod
+        def from_ref(cls, ref: str) -> Reference:
+            return cls(ref=ref)  # type: ignore
 
 
 class AsyncAPI(BaseModel):
@@ -32,10 +59,20 @@ class AsyncAPI(BaseModel):
     """The operations this application MUST implement."""
 
     def export(self) -> dict[str, Any]:
-        return self.model_dump(exclude_none=True, by_alias=True)
+        if pydantic.__version__.startswith("1."):
+            return self.dict(  # pyright: ignore[reportDeprecated]
+                exclude_none=True, by_alias=True
+            )
+        else:
+            return self.model_dump(exclude_none=True, by_alias=True)
 
     def export_json(self, indent: int | None = None) -> str:
-        return self.model_dump_json(indent=indent, exclude_none=True, by_alias=True)
+        if pydantic.__version__.startswith("1."):
+            return self.json(  # pyright: ignore[reportDeprecated]
+                indent=indent, exclude_none=True, by_alias=True
+            )
+        else:
+            return self.model_dump_json(indent=indent, exclude_none=True, by_alias=True)
 
 
 class Server(BaseModel):
@@ -152,17 +189,6 @@ class Contact(BaseModel):
 
     email: str | None = None
     """The email address of the contact person/organization. MUST be in the format of an email address."""
-
-
-class Reference(BaseModel):
-    """A simple object to allow referencing other components in the specification, within the same or external AsyncAPI document. By using JSON pointers (i.e. `{"$ref": "#/components/schemas/MySchema"}`), the properties of the referenced structure can be practically re-used in the specification."""
-
-    model_config = ConfigDict(populate_by_name=True)
-    ref: str = Field(alias="$ref")
-
-    @classmethod
-    def from_ref(cls, ref: str) -> Reference:
-        return cls(ref=ref)  # type: ignore
 
 
 class Parameter(BaseModel):

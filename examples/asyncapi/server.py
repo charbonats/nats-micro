@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from nats_contrib import micro
-from nats_contrib.micro.typedsdk import add_application
+from nats_contrib import micro, asyncapi
+
 
 from my_endpoint_implementation import MyEndpointImplementation
 
@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 
 
-async def setup(ctx: micro.sdk.Context) -> None:
+async def setup(ctx: micro.Context) -> None:
     """An example setup function to start a micro service."""
 
     # Push a function to be called when the service is stopped
@@ -27,7 +27,7 @@ async def setup(ctx: micro.sdk.Context) -> None:
     logger.info("Configuring the service")
 
     # Mount the app
-    await add_application(
+    await asyncapi.micro.add_application(
         ctx,
         app=app.with_endpoints(
             MyEndpointImplementation(12),

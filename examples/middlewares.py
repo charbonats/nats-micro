@@ -28,7 +28,7 @@ async def my_middleware2(req: micro.Request, handler: NextHandler) -> Response:
     return response
 
 
-async def setup(ctx: micro.sdk.Context) -> None:
+async def setup(ctx: micro.Context) -> None:
     """Configure the service.
 
     This function is executed after the NATS connection is established.
