@@ -11,14 +11,17 @@ class Message(Generic[ParamsT, T, R, E], metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def params(self) -> ParamsT:
+        """Get the message parameters."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def payload(self) -> T:
+        """Get the message payload."""
         raise NotImplementedError
 
     @abc.abstractmethod
     def headers(self) -> dict[str, str]:
+        """Get the message headers."""
         raise NotImplementedError
 
     @overload
@@ -42,7 +45,7 @@ class Message(Generic[ParamsT, T, R, E], metaclass=abc.ABCMeta):
     async def respond(
         self, data: Any = None, *, headers: dict[str, str] | None = None
     ) -> None:
-        headers = headers or {}
+        """Respond to the message."""
         raise NotImplementedError
 
     @overload
@@ -75,4 +78,5 @@ class Message(Generic[ParamsT, T, R, E], metaclass=abc.ABCMeta):
         data: Any = None,
         headers: dict[str, str] | None = None,
     ) -> None:
+        """Respond with an error to the message."""
         raise NotImplementedError

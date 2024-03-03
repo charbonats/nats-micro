@@ -87,7 +87,7 @@ class OperationRequest(Generic[ParamsT, T, R, E]):
 
     subject: str
     params: ParamsT
-    request: T
+    payload: T
     spec: OperationSpec[Any, ParamsT, T, R, E]
 
 
@@ -151,7 +151,7 @@ class Operation(Generic[S, ParamsT, T, R, E], metaclass=abc.ABCMeta):
         return OperationRequest(
             subject=subject,
             params=params,
-            request=data,
+            payload=data,
             spec=spec,
         )
 

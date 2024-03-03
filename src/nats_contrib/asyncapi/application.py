@@ -80,13 +80,13 @@ class Application:
     def with_endpoints(
         self, *endpoint: Operation[Any, Any, Any, Any, Any]
     ) -> Application:
+        """Return a new service instance with additional endpoints registered."""
         service = self.__copy__()
         for ep in endpoint:
             service._add_endpoints(ep)
         return service
 
     def _add_endpoints(self, endpoint: Operation[Any, Any, Any, Any, Any]) -> None:
-        """Return a new service instance with an additional endpoint registered."""
         for candidate in self.endpoints:
             if isinstance(endpoint, candidate):
                 break

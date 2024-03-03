@@ -157,7 +157,7 @@ class Client:
         timeout: float = 1,
     ) -> Reply[ParamsT, T, R, E]:
         """Send a request."""
-        data = request.spec.request.type_adapter.encode(request.request)
+        data = request.spec.request.type_adapter.encode(request.payload)
         try:
             response = await self._client.request(
                 request.subject,

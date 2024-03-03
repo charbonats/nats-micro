@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from types import new_class
+from typing import Any, Generic
 
 from .message import Message
-from .types import E, ParamsT, R, T
+from .operation import Operation
+from .types import E, ParamsT, R, S, T
 
 
 class NoResponseError(Exception):
@@ -92,3 +94,63 @@ class StubMessage(Message[ParamsT, T, R, E]):
         if self._response_headers is ...:
             raise NoResponseError("No response has been set")
         return self._response_headers
+
+
+class StubOperation(Generic[S, ParamsT, T, R, E]):
+    """A stub operation for testing."""
+
+    _operation: Operation[S, ParamsT, T, R, E]
+
+    def __init_subclass__(cls, operation: Operation[S, ParamsT, T, R, E]) -> None:
+        super().__init_subclass__()
+        cls._operation = operation
+
+    def __init__(
+        self,
+        *,
+        result: R = ...,  # pyright: ignore[reportInvalidTypeVarUse]
+        error: E = ...,  # pyright: ignore[reportInvalidTypeVarUse]
+    ) -> None:
+        if result is ... and error is ...:
+            raise ValueError("Either result or error must be set")
+        if result is not ... and error is not ...:
+            raise ValueError("Either result or error must be set, not both")
+        self._result = result
+        self._error = error
+        self._called_with: list[Message[ParamsT, T, R, E]] = []
+
+    async def handle(self, request: Message[Any, Any, R, E]) -> None:
+        self._called_with.append(request)
+        if self._result is not ...:
+            await request.respond(self._result)
+        else:
+            await request.respond_error(500, "Internal Server Error", data=self._error)
+
+    def called_with(self) -> list[Message[ParamsT, T, R, E]]:
+        return self._called_with
+
+
+def make_operation(
+    operation: type[Operation[S, ParamsT, T, R, E]],
+    result: R = ...,
+    error: E = ...,
+) -> StubOperation[S, ParamsT, T, R, E]:
+    new_cls = new_class(
+        operation.__class__.__name__,
+        (operation,),
+    )
+    new_cls = new_class(
+        new_cls.__name__,
+        (StubOperation,),
+        kwds={"operation": operation},
+    )
+    return new_cls(result=result, error=error)
+
+
+def make_message(
+    operation: Operation[S, ParamsT, T, R, E],
+    params: ParamsT,
+    data: T,
+    headers: dict[str, str] | None = None,
+) -> StubMessage[ParamsT, T, R, E]:
+    return StubMessage(params, data, headers)
