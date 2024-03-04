@@ -31,6 +31,7 @@ dependencies = [
 
 [project.optional-dependencies]
 watch = ["watchfiles"]
+asyncapi = ["uvicorn", "starlette", "watchfiles", "pydantic"]
 build = ["pip-tools", "build", "wheel"]
 dev = [
     "black",

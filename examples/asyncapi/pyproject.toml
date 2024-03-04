@@ -8,7 +8,7 @@ authors = [
 requires-python = ">=3.8,<4.0"
 dynamic = ["version"]
 dependencies = [
-    "nats-micro@git+ssh://git@github.com/charbonats/nats-micro.git@typed_sdk",
+    "nats-micro[asyncapi]@git+ssh://git@github.com/charbonats/nats-micro.git@typed_sdk",
     "nkeys",
 ]
 
