@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from nats_contrib.asyncapi import operation, Message, ErrorHandler
+from nats_contrib.asyncapi import ErrorHandler, Message, operation
 
 # Purely optional, but it can be used to type hint the request
 MyEndpointRequest = Message["MyParams", "MyRequest", "MyResponse", str]

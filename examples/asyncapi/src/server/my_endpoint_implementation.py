@@ -3,8 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
-from my_endpoint import MyEndpointRequest, MyEndpoint, MyResponse
-
+from contract.my_endpoint import MyEndpoint, MyEndpointRequest, MyResponse
 
 logger = logging.getLogger("my-endpoint")
 

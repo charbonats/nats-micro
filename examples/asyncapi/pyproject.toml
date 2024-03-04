@@ -1,0 +1,23 @@
+#syntax=gucharbon/microb
+
+[project]
+name = "example-asyncapi"
+authors = [
+    { name = "Guillaume Charbonnier", email = "guillaume.charbonnier@araymond.com" },
+]
+requires-python = ">=3.8,<4.0"
+dynamic = ["version"]
+dependencies = [
+    "nats-micro@git+ssh://git@github.com/charbonats/nats-micro.git@typed_sdk",
+    "nkeys",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "contract.__version__" }
+
+[tool.microb.target.default]
+entrypoint = ["micro", "run", "server.server:setup"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

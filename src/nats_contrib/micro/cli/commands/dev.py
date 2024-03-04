@@ -6,9 +6,8 @@ import importlib
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Iterable
 
-import watchfiles
 from nats_contrib.connect_opts import ConnectOption
 
 from ...context import Context
@@ -63,6 +62,7 @@ async def run_with_watcher(
     connect_options: Iterable[ConnectOption],
     setup: Callable[[Context], Coroutine[None, None, None]],
 ) -> None:
+
     while True:
         async with Context() as ctx:
             ctx.trap_signal()
@@ -87,7 +87,14 @@ class _Watcher:
         ctx: Context,
         *path: str,
     ) -> None:
-
+        try:
+            import watchfiles
+        except (ImportError, ModuleNotFoundError):
+            print(
+                "watchfiles must be installed in order to use the dev command",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         self.ctx = ctx
         self.path = path
         for p in self.path:
@@ -95,12 +102,12 @@ class _Watcher:
                 raise ValueError(f"Path {p} is not a directory")
         self.iterator = watchfiles.awatch(*self.path)  # type: ignore
 
-    async def _next_change(self) -> set[tuple[watchfiles.Change, str]]:
+    async def _next_change(self) -> set[tuple[Any, str]]:
         return await self.iterator.__anext__()
 
     async def next_change(
         self,
-    ) -> set[tuple[watchfiles.Change, str]] | None:
+    ) -> set[tuple[Any, str]] | None:
         next_task = asyncio.create_task(self._next_change())
         wait_task = asyncio.create_task(self.ctx.wait())
         await asyncio.wait([next_task, wait_task], return_when=asyncio.FIRST_COMPLETED)

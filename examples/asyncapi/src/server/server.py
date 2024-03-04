@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import logging
 
-from nats_contrib import micro, asyncapi
 
+from nats_contrib import asyncapi, micro
 
-from my_endpoint_implementation import MyEndpointImplementation
+from contract.app import app
 
-from app import app
-
+from .my_endpoint_implementation import MyEndpointImplementation
 
 logger = logging.getLogger("app")
 

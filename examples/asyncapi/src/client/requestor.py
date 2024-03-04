@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from nats_contrib import asyncapi
 
-from my_endpoint import MyEndpoint, MyRequest
+from contract.my_endpoint import MyEndpoint, MyRequest
 
 
 async def request(

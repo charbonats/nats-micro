@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from nats_contrib.asyncapi import Application
+from .my_endpoint import MyEndpoint
 
-from my_endpoint import MyEndpoint
+from nats_contrib.asyncapi import Application
 
 
 app = Application(
