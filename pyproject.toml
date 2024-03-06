@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nats-micro"
 authors = [
-    { name = "Guillaume Charbonnier", email = "guillaume.charbonnier@araymond.com" },
+    { name = "Guillaume Charbonnier", email = "gu.charbon@gmail.com" },
 ]
 description = "NATS Micro implementation for Python"
 readme = "README.md"
