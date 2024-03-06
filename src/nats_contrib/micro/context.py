@@ -3,14 +3,14 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import inspect
 import signal
 from typing import Any, AsyncContextManager, Awaitable, Callable, Coroutine, TypeVar
 
 from nats.aio.client import Client as NATS
 from nats_contrib.connect_opts import ConnectOption, connect
 
-from ..api import Service, add_service
-from .decorators import register_service, register_group
+from .api import Service, add_service
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -74,37 +74,6 @@ class Context:
         self.services.append(service)
         return service
 
-    async def register_service(
-        self,
-        service: Any,
-        prefix: str | None = None,
-        now: Callable[[], datetime.datetime] | None = None,
-        id_generator: Callable[[], str] | None = None,
-        api_prefix: str | None = None,
-    ) -> Service:
-        """Register a service in the context.
-
-        This will start the service using the client used
-        to connect to the NATS server.
-        """
-        service = register_service(
-            self.client,
-            service,
-            prefix,
-            now,
-            id_generator,
-            api_prefix,
-        )
-        await self.enter(service)
-        self.services.append(service)
-        return service
-
-    async def register_group(
-        self, service: Service, group: Any, prefix: str | None = None
-    ) -> None:
-        """Register a group in the context."""
-        await register_group(service, group, prefix=prefix)
-
     def reset(self) -> None:
         """Reset all the services."""
         for service in self.services:
@@ -157,6 +126,13 @@ class Context:
         loop = asyncio.get_event_loop()
         for sig in signals:
             loop.add_signal_handler(sig, self.cancel)
+
+    def push(self, callback: Callable[[], Awaitable[None] | None]) -> None:
+        """Add a callback to the exit stack."""
+        if inspect.iscoroutinefunction(callback):
+            self.exit_stack.push_async_callback(callback)
+        else:
+            self.exit_stack.callback(callback)
 
     async def enter(self, async_context: AsyncContextManager[T]) -> T:
         """Enter an async context."""

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import Awaitable, Callable
+
 from typing_extensions import TypeAlias
 
-from .request import Request, Handler
-
+from .request import Handler, Request
 
 NextHandler: TypeAlias = Callable[[Request], Awaitable["Response"]]
 """NextHandler is a type alias for the next handler in a chain of middlewares."""

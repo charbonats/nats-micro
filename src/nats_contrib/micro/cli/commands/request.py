@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 from nats_contrib.connect_opts import ConnectOption
 
-from ... import sdk
 from ...client import Client as MicroClient
+from ...context import Context
 from ..flags import Flags
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ async def run(
     subject: str,
     payload: str,
 ) -> None:
-    ctx = sdk.Context()
+    ctx = Context()
     async with ctx:
         await ctx.connect(*opts)
         if ctx.cancelled():
