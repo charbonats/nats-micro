@@ -1,7 +1,8 @@
 """Minimal example of NATS micro usage."""
 
-from nats_contrib import micro
 from nats_contrib.connect_opts import option
+
+from nats_contrib import micro
 
 
 async def echo(req: micro.Request) -> None:
@@ -10,7 +11,7 @@ async def echo(req: micro.Request) -> None:
     await req.respond(req.data())
 
 
-async def setup(ctx: micro.sdk.Context) -> None:
+async def setup(ctx: micro.Context) -> None:
     """Configure the service.
 
     This function is executed after the NATS connection is established.
@@ -37,7 +38,7 @@ async def setup(ctx: micro.sdk.Context) -> None:
 
 
 if __name__ == "__main__":
-    micro.sdk.run(
+    micro.run(
         setup,
         # Use options as needed
         option.WithAllowReconnect(

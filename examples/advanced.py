@@ -7,44 +7,13 @@ import logging
 
 from nats_contrib import micro
 
-LOG_CONFIG = {
-    "version": 1,
-    "formatters": {
-        "default": {
-            "format": "%(asctime)s - %(levelname)-7s - %(message)s",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-        },
-    },
-    "root": {
-        "level": "INFO",
-        "handlers": ["console"],
-    },
-    "loggers": {
-        "micro": {
-            "level": "INFO",
-            "handlers": [],
-        },
-        "uvicorn.error": {
-            "level": "INFO",
-            "handlers": [],
-        },
-        "uvicorn.access": {
-            "level": "INFO",
-            "handlers": [],
-        },
-        "uvicorn.asgi": {
-            "level": "INFO",
-            "handlers": [],
-        },
-    },
-}
 
 logger = logging.getLogger("micro")
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 
 async def echo_handler(req: micro.Request) -> None:
@@ -55,7 +24,7 @@ async def echo_handler(req: micro.Request) -> None:
 
 
 async def setup(
-    ctx: micro.sdk.Context,
+    ctx: micro.Context,
 ) -> None:
     # Create and attach a new watcher
     watcher = ConnectionObserver(ctx)
@@ -83,7 +52,7 @@ async def setup(
 class ConnectionObserver:
     """A class used to watch the connection to the NATS server."""
 
-    def __init__(self, ctx: micro.sdk.Context) -> None:
+    def __init__(self, ctx: micro.Context) -> None:
         self.ctx = ctx
 
     async def on_disconnected(self) -> None:
@@ -107,14 +76,14 @@ class ConnectionObserver:
         # Reset all services stats
         self.ctx.reset()
 
-    def attach(self, ctx: micro.sdk.Context) -> None:
+    def attach(self, ctx: micro.Context) -> None:
         """Attach the watcher to the context."""
         ctx.add_disconnected_callback(self.on_disconnected)
         ctx.add_closed_callback(self.on_closed)
         ctx.add_reconnected_callback(self.on_reconnected)
 
 
-async def setup_http_server(ctx: micro.sdk.Context) -> None:
+async def setup_http_server(ctx: micro.Context) -> None:
     # FastAPI Uvicorn override
     import uvicorn
     from starlette.applications import Starlette
@@ -161,7 +130,8 @@ async def setup_http_server(ctx: micro.sdk.Context) -> None:
             app=app,
             loop="asyncio",
             access_log=True,
-            log_config=LOG_CONFIG,
+            log_level=None,
+            log_config=None,
         )
     )
     # Run the server
